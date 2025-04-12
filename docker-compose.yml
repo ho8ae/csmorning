@@ -3,11 +3,11 @@ version: '3.8'
 services:
   nginx:
     image: nginx:alpine
-    container_name: nginx
+    container_name: nginx-csmorning
     restart: always
     ports:
-      - "8001:80"
-      - "8001:443"
+      - "8003:80"
+      - "8004:443"
     volumes:
       - ./nginx/conf.d:/etc/nginx/conf.d
       - ./certbot/conf:/etc/letsencrypt
@@ -22,7 +22,7 @@ services:
     build:
       context: ./front
       dockerfile: Dockerfile
-    container_name: landing-page
+    container_name: landing-page-csmorning
     restart: always
     networks:
       - app-network
@@ -31,7 +31,7 @@ services:
     build:
       context: ./server
       dockerfile: Dockerfile
-    container_name: api-server
+    container_name: api-server-csmorning
     restart: always
     environment:
       - NODE_ENV=production
@@ -46,7 +46,7 @@ services:
 
   certbot:
     image: certbot/certbot
-    container_name: certbot
+    container_name: certbot-csmorning
     volumes:
       - ./certbot/conf:/etc/letsencrypt
       - ./certbot/www:/var/www/certbot
@@ -56,3 +56,4 @@ services:
 networks:
   app-network:
     driver: bridge
+    name: csmorning-network
