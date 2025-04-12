@@ -5,9 +5,6 @@ services:
     image: nginx:alpine
     container_name: nginx-csmorning
     restart: always
-    ports:
-      - "8003:80"
-      - "8004:443"
     volumes:
       - ./nginx/conf.d:/etc/nginx/conf.d
       - ./certbot/conf:/etc/letsencrypt
