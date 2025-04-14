@@ -1,163 +1,132 @@
-// src/utils/scheduler.js
-const schedule = require('node-schedule');
-const { PrismaClient } = require('@prisma/client');
-const kakaoService = require('../services/kakaoService');
-
-// Prisma 클라이언트 초기화
-const prisma = new PrismaClient();
+const cron = require('node-cron');
+const { prisma } = require('../config/db');
+const kakaoService = require('../services/kakao.service');
 
 /**
- * 스케줄러 시작 - 서버 시작 시 호출
+ * 매일 아침 질문 발송 스케줄러
  */
-function startScheduler() {
-  console.log('스케줄러가 시작되었습니다. 매일 아침 8시에 질문이 전송됩니다.');
-  
-  // '0 8 * * *' -> 매일 아침 8시 (cron 표현식)
-  const dailyJob = schedule.scheduleJob('0 8 * * *', async () => {
+const scheduleDailyQuestion = () => {
+  // 매일 아침 9시에 실행 (서버 시간 기준)
+  cron.schedule('0 9 * * *', async () => {
     try {
-      console.log('오늘의 CS 면접 질문 전송을 시작합니다:', new Date());
-      await sendDailyQuestion();
-    } catch (error) {
-      console.error('스케줄러 실행 오류:', error);
-    }
-  });
-  
-  return dailyJob;
-}
-
-/**
- * 오늘의 질문 전송
- */
-async function sendDailyQuestion() {
-  try {
-    // 1. 랜덤 질문 선택
-    const randomQuestion = await selectRandomQuestion();
-    if (!randomQuestion) {
-      console.error('전송할 질문을 찾을 수 없습니다.');
-      return null;
-    }
-    
-    // 2. DailyQuestion 생성
-    const dailyQuestion = await prisma.dailyQuestion.create({
-      data: {
-        questionId: randomQuestion.id
-      },
-      include: {
-        question: true
+      console.log('매일 질문 발송 스케줄러 실행...');
+      
+      // 오늘 이미 발송된 질문이 있는지 확인
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      const existingDaily = await prisma.dailyQuestion.findFirst({
+        where: {
+          sentDate: {
+            gte: today
+          }
+        }
+      });
+      
+      if (existingDaily) {
+        console.log('오늘 이미 질문이 발송되었습니다.');
+        return;
       }
-    });
-    
-    // 3. 구독 중인 모든 사용자에게 메시지 전송
-    const subscribers = await prisma.user.findMany({
-      where: { isSubscribed: true }
-    });
-    
-    console.log(`${subscribers.length}명의 사용자에게 질문 전송 시작`);
-    
-    // 옵션을 배열로 변환
-    const options = randomQuestion.options;
-    
-    for (const user of subscribers) {
-      try {
-        // 질문 옵션을 텍스트로 변환
-        const optionsText = options
-          .map((option, index) => `${index + 1}. ${option}`)
-          .join('\n');
+      
+      // 활성 상태인 질문 중 랜덤으로 선택
+      // 이전에 사용된 적이 없는 질문 선택을 우선
+      const unusedQuestions = await prisma.question.findMany({
+        where: {
+          active: true,
+          dailyQuestions: {
+            none: {}
+          }
+        }
+      });
+      
+      let selectedQuestion;
+      
+      if (unusedQuestions.length > 0) {
+        // 사용되지 않은 질문 중 랜덤 선택
+        const randomIndex = Math.floor(Math.random() * unusedQuestions.length);
+        selectedQuestion = unusedQuestions[randomIndex];
+      } else {
+        // 모든 질문이 이미 사용되었다면, 가장 오래 전에 사용된 질문 선택
+        const questions = await prisma.question.findMany({
+          where: {
+            active: true
+          },
+          include: {
+            dailyQuestions: {
+              orderBy: {
+                sentDate: 'asc'
+              },
+              take: 1
+            }
+          },
+          orderBy: {
+            dailyQuestions: {
+              sentDate: 'asc'
+            }
+          },
+          take: 1
+        });
         
-        // 카카오톡 메시지 구성
-        const messageTemplate = {
+        if (questions.length === 0) {
+          console.error('활성화된 질문이 없습니다.');
+          return;
+        }
+        
+        selectedQuestion = questions[0];
+      }
+      
+      // DailyQuestion 생성
+      const dailyQuestion = await prisma.dailyQuestion.create({
+        data: {
+          questionId: selectedQuestion.id
+        },
+        include: {
+          question: true
+        }
+      });
+      
+      // 구독자들에게 발송
+      const subscribers = await prisma.user.findMany({
+        where: {
+          isSubscribed: true
+        }
+      });
+      
+      console.log(`${subscribers.length}명의 구독자에게 질문 발송 중...`);
+      
+      // 질문 메시지 템플릿 생성
+      const optionsText = selectedQuestion.options
+        .map((option, index) => `${index + 1}. ${option}`)
+        .join('\n');
+      
+      const questionText = `📝 오늘의 CS 면접 질문\n\n${selectedQuestion.text}\n\n${optionsText}\n\n답변은 숫자만 입력해주세요. (예: 1)`;
+      
+      // 사용자별 메시지 발송 (비동기 처리)
+      const sendPromises = subscribers.map(user => {
+        const template = {
           object_type: 'text',
-          text: `[오늘의 CS 면접 질문]\n\n${randomQuestion.text}\n\n${optionsText}\n\n답변은 번호로 입력해주세요 (예: 1)`,
+          text: questionText,
           link: {
             web_url: process.env.SERVICE_URL || 'https://your-service.com',
             mobile_web_url: process.env.SERVICE_URL || 'https://your-service.com'
-          },
-          buttons: [
-            {
-              title: '개발자에게 커피 보내기 ☕',
-              link: {
-                web_url: `${process.env.SERVICE_URL}/donation?userId=${user.kakaoId}`,
-                mobile_web_url: `${process.env.SERVICE_URL}/donation?userId=${user.kakaoId}`
-              }
-            }
-          ]
+          }
         };
         
-        // 메시지 전송
-        await kakaoService.sendMessage(user.kakaoId, messageTemplate);
-        console.log(`사용자 ${user.kakaoId}에게 메시지 전송 완료`);
-      } catch (error) {
-        console.error(`사용자 ${user.kakaoId}에게 메시지 전송 실패:`, error);
-      }
+        return kakaoService.sendMessage(user.kakaoId, template);
+      });
+      
+      // 모든 발송 완료 대기
+      await Promise.allSettled(sendPromises);
+      
+      console.log(`오늘의 질문(ID: ${dailyQuestion.id}) 발송 완료`);
+    } catch (error) {
+      console.error('매일 질문 스케줄러 오류:', error);
     }
-    
-    console.log('오늘의 질문 전송 완료');
-    return dailyQuestion;
-  } catch (error) {
-    console.error('질문 전송 중 오류 발생:', error);
-    throw error;
-  }
-}
-
-/**
- * 랜덤 질문 선택
- */
-async function selectRandomQuestion() {
-  // 활성화된 질문 수 확인
-  const count = await prisma.question.count({
-    where: { active: true }
   });
   
-  if (count === 0) {
-    return null;
-  }
-  
-  // 랜덤 스킵 값 계산
-  const randomSkip = Math.floor(Math.random() * count);
-  
-  // 랜덤 질문 가져오기
-  return prisma.question.findFirst({
-    where: { active: true },
-    skip: randomSkip
-  });
-}
-
-/**
- * 특정 질문 수동 전송 (관리자 API용)
- */
-async function sendSpecificQuestion(questionId) {
-  try {
-    // 질문 존재 여부 확인
-    const question = await prisma.question.findUnique({
-      where: { id: questionId }
-    });
-    
-    if (!question) {
-      throw new Error('질문을 찾을 수 없습니다.');
-    }
-    
-    // DailyQuestion 생성
-    const dailyQuestion = await prisma.dailyQuestion.create({
-      data: {
-        questionId: question.id
-      },
-      include: {
-        question: true
-      }
-    });
-    
-    // 사용자들에게 메시지 전송 (위의 sendDailyQuestion 함수와 유사)
-    // ...생략
-    
-    return dailyQuestion;
-  } catch (error) {
-    console.error('수동 질문 전송 중 오류 발생:', error);
-    throw error;
-  }
-}
+  console.log('매일 질문 발송 스케줄러가 설정되었습니다.');
+};
 
 module.exports = {
-  startScheduler,
-  sendDailyQuestion,
-  sendSpecificQuestion
+  scheduleDailyQuestion
 };
