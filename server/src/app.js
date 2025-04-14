@@ -2,17 +2,17 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
-const { PrismaClient } = require('@prisma/client');
 const path = require('path');
 
-// 라우터 임포트 (나중에 생성 예정)
-const questionRoutes = require('./routes/questionRoutes');
-const webhookRoutes = require('./routes/webhookRoutes');
-const donationRoutes = require('./routes/donationRoutes');
-const adminRoutes = require('./routes/adminRoutes');
+// 미들웨어 임포트
+const prismaMiddleware = require('./middleware/prisma.middleware');
+const { notFoundMiddleware, errorHandlerMiddleware } = require('./middleware/error.middleware');
 
-// Prisma 클라이언트 초기화
-const prisma = new PrismaClient();
+// 라우터 임포트
+const questionRoutes = require('./api/question/question.routes');
+const webhookRoutes = require('./api/webhook/webhook.routes');
+const donationRoutes = require('./api/donation/donation.routes');
+const adminRoutes = require('./api/admin/admin.routes');
 
 // Express 앱 초기화
 const app = express();
@@ -24,14 +24,11 @@ app.use(cors());
 app.use(helmet());
 app.use(morgan('dev'));
 
-// 정적 파일 서빙 (나중에 필요한 경우 활성화)
+// 정적 파일 서빙
 app.use(express.static(path.join(__dirname, '../public')));
 
 // Prisma 클라이언트를 요청 객체에 추가
-app.use((req, res, next) => {
-  req.prisma = prisma;
-  next();
-});
+app.use(prismaMiddleware);
 
 // 라우트 설정
 app.use('/api/questions', questionRoutes);
@@ -45,25 +42,7 @@ app.get('/', (req, res) => {
 });
 
 // 에러 핸들링 미들웨어
-app.use((req, res, next) => {
-  const error = new Error('Not Found');
-  error.status = 404;
-  next(error);
-});
-
-app.use((err, req, res, next) => {
-  const status = err.status || 500;
-  const message = err.message || 'Internal Server Error';
-  
-  console.error(err);
-  
-  res.status(status).json({
-    error: {
-      message,
-      status,
-      stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
-    }
-  });
-});
+app.use(notFoundMiddleware);
+app.use(errorHandlerMiddleware);
 
 module.exports = app;

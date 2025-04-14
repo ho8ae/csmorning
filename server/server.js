@@ -1,20 +1,23 @@
 require('dotenv').config();
 const app = require('./src/app');
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
+const { prisma, connectDB, disconnectDB } = require('./src/config/db');
+const { scheduleDailyQuestion } = require('./src/utils/scheduler');
 
 const PORT = process.env.PORT || 3000;
 
-// 스케줄러를 나중에 구현하고 여기서 실행할 예정
-
+// 서버 시작 함수
 async function startServer() {
   try {
-    // 데이터베이스 연결 확인
-    await prisma.$connect();
+    // 데이터베이스 연결
+    await connectDB();
     console.log('데이터베이스 연결 성공');
     
+    // 스케줄러 시작
+    scheduleDailyQuestion();
+    console.log('스케줄러 시작됨');
+    
     // 서버 시작
-    app.listen(PORT,'0.0.0.0', () => {
+    app.listen(PORT, '0.0.0.0', () => {
       console.log(`서버가 포트 ${PORT}에서 실행 중입니다`);
     });
   } catch (error) {
@@ -28,13 +31,11 @@ startServer();
 
 // 정상 종료 처리
 process.on('SIGINT', async () => {
-  await prisma.$disconnect();
-  console.log('데이터베이스 연결 종료');
+  await disconnectDB();
   process.exit(0);
 });
 
 process.on('SIGTERM', async () => {
-  await prisma.$disconnect();
-  console.log('데이터베이스 연결 종료');
+  await disconnectDB();
   process.exit(0);
 });
