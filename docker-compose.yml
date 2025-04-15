@@ -38,6 +38,7 @@ services:
       - KAKAO_PAY_CID=${KAKAO_PAY_CID}
       - SERVICE_URL=${SERVICE_URL}
       - ADMIN_API_KEY=${ADMIN_API_KEY}
+      - VITE_KAKAO_REST_API_KEY=${VITE_KAKAO_REST_API_KEY}
     networks:
       - app-network
 
