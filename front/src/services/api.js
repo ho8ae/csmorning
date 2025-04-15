@@ -1,7 +1,11 @@
 import axios from 'axios';
 
 // API 기본 URL 설정
-const API_URL = import.meta.env.VITE_API_URL || 'https://csmorning.co.kr/';
+
+const isProd = import.meta.env.MODE === 'production';
+const API_URL =
+  import.meta.env.VITE_API_URL ||
+  (isProd ? 'https://csmorning.co.kr' : 'http://localhost:3000');
 
 // Axios 인스턴스 생성
 const apiClient = axios.create({
