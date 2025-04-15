@@ -1,7 +1,11 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion'; // eslint-disable-line no-unused-vars
+import useAuthStore from '../../store/authStore';
 
 const Navbar = () => {
+  const navigate = useNavigate();
+  const { isAuthenticated, user } = useAuthStore();
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
@@ -28,6 +32,35 @@ const Navbar = () => {
     { name: '후기', href: '#testimonials' },
     { name: '문의하기', href: '#contact' }
   ];
+
+  // 로그인 상태에 따라 나타낼 버튼 결정
+  const renderActionButton = () => {
+    if (isAuthenticated) {
+      return (
+        <motion.button
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5, delay: 0.5 }}
+          onClick={() => navigate(user?.role === 'admin' ? '/admin' : '/dashboard')}
+          className="bg-yellow-400 hover:bg-yellow-500 text-blue-900 px-4 py-2 rounded-full font-medium transition duration-300"
+        >
+          {user?.role === 'admin' ? '관리자 대시보드' : '대시보드 확인하기'}
+        </motion.button>
+      );
+    } else {
+      return (
+        <motion.button
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5, delay: 0.5 }}
+          onClick={() => navigate('/login')}
+          className="bg-yellow-400 hover:bg-yellow-500 text-blue-900 px-4 py-2 rounded-full font-medium transition duration-300"
+        >
+          시작하기
+        </motion.button>
+      );
+    }
+  };
 
   return (
     <nav className={`fixed w-full z-50 transition-all duration-300 ${
@@ -61,14 +94,7 @@ const Navbar = () => {
                 {link.name}
               </motion.a>
             ))}
-            <motion.button
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.5, delay: 0.5 }}
-              className="bg-yellow-400 hover:bg-yellow-500 text-blue-900 px-4 py-2 rounded-full font-medium transition duration-300"
-            >
-              시작하기
-            </motion.button>
+            {renderActionButton()}
           </div>
 
           {/* 모바일 메뉴 토글 버튼 */}
@@ -118,12 +144,30 @@ const Navbar = () => {
                   {link.name}
                 </a>
               ))}
-              <button
-                className="mt-4 w-full bg-yellow-400 hover:bg-yellow-500 text-blue-900 px-4 py-2 rounded-full font-medium transition duration-300"
-                onClick={() => setIsOpen(false)}
-              >
-                시작하기
-              </button>
+              
+              <div className="mt-4">
+                {isAuthenticated ? (
+                  <button
+                    className="w-full bg-yellow-400 hover:bg-yellow-500 text-blue-900 px-4 py-2 rounded-full font-medium transition duration-300"
+                    onClick={() => {
+                      setIsOpen(false);
+                      navigate(user?.role === 'admin' ? '/admin' : '/dashboard');
+                    }}
+                  >
+                    {user?.role === 'admin' ? '관리자 대시보드' : '대시보드 확인하기'}
+                  </button>
+                ) : (
+                  <button
+                    className="w-full bg-yellow-400 hover:bg-yellow-500 text-blue-900 px-4 py-2 rounded-full font-medium transition duration-300"
+                    onClick={() => {
+                      setIsOpen(false);
+                      navigate('/login');
+                    }}
+                  >
+                    시작하기
+                  </button>
+                )}
+              </div>
             </div>
           </motion.div>
         )}

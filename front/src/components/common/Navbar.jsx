@@ -8,13 +8,13 @@ function Navbar() {
     <nav className="bg-white shadow-md py-4 px-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-xl font-semibold">CS Morning Admin</h1>
+          <Link to='/' className="text-xl font-semibold">CS Morning {user?.role=='admin' ? 'Admin': ''}</Link>
         </div>
         
         <div className="flex items-center">
           {user && (
             <>
-              <span className="mr-4">안녕하세요, {user.name || '관리자'}님</span>
+              <span className="mr-4">안녕하세요, {user?.role=='admin'? 'admin' : user.nickname}님</span>
               <button 
                 onClick={logout}
                 className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm"
