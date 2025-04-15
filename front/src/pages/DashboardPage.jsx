@@ -1,128 +1,111 @@
-import { useQueries } from '@tanstack/react-query';
-import { statsAPI, questionsAPI } from '../services/api';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import useAuthStore from '../store/authStore';
+import { questionsAPI } from '../services/api';
+import Navbar from '../components/common/Navbar';
+import Loading from '../components/common/Loading';
 
-// 대시보드 통계 카드 컴포넌트
-const StatCard = ({ title, value, icon, color }) => (
-  <div className="bg-white rounded-lg shadow p-6">
-    <div className="flex items-center">
-      <div className={`p-3 rounded-full ${color} text-white mr-4`}>
-        {icon}
-      </div>
-      <div>
-        <p className="text-sm text-gray-500">{title}</p>
-        <p className="text-2xl font-semibold">{value}</p>
-      </div>
-    </div>
-  </div>
-);
+// Dashboard 컴포넌트들
+import DashboardHeader from '../components/dashboard/DashboardHeader';
+import StatsOverview from '../components/dashboard/StatsOverview';
+import QuestionCard from '../components/dashboard/QuestionCard';
+import HelpSection from '../components/dashboard/HelpSection';
+import Footer from '../components/dashboard/Footer';
 
-function DashboardPage() {
-  const results = useQueries({
-    queries: [
-      { 
-        queryKey: ['responseStats'], 
-        queryFn: statsAPI.getResponseStats 
-      },
-      { 
-        queryKey: ['donationStats'], 
-        queryFn: statsAPI.getDonationStats 
-      },
-      { 
-        queryKey: ['todayQuestion'], 
-        queryFn: questionsAPI.getTodayQuestion 
-      }
-    ]
+const DashboardPage = () => {
+  const navigate = useNavigate(); 
+  const { user, logout } = useAuthStore();
+  const [todayQuestion, setTodayQuestion] = useState(null);
+  const [selectedAnswer, setSelectedAnswer] = useState(null);
+  const [isAnswered, setIsAnswered] = useState(false);
+  const [showExplanation, setShowExplanation] = useState(false);
+  const [isCorrect, setIsCorrect] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [stats, setStats] = useState({
+    totalAnswered: 0,
+    correctAnswers: 0,
+    accuracy: 0
   });
-  
-  const isLoading = results.some(result => result.isLoading);
-  const isError = results.some(result => result.isError);
-  
-  if (isLoading) {
-    return <div className="text-center py-10">로딩 중...</div>;
-  }
-  
-  if (isError) {
-    return <div className="text-center py-10 text-red-500">데이터를 불러오는 중 오류가 발생했습니다.</div>;
-  }
-  
-  const [responseStats, donationStats, todayQuestion] = results.map(result => result.data);
-  
-  return (
-    <div>
-      <h1 className="text-2xl font-semibold mb-6">대시보드</h1>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <StatCard 
-          title="총 사용자" 
-          value={responseStats.data.totalUsers || 0} 
-          icon="👥" 
-          color="bg-blue-500" 
-        />
-        <StatCard 
-          title="총 응답 수" 
-          value={responseStats.data.totalResponses || 0} 
-          icon="✅" 
-          color="bg-green-500" 
-        />
-        <StatCard 
-          title="총 기부 수" 
-          value={donationStats.data.totalDonations || 0} 
-          icon="☕" 
-          color="bg-yellow-500" 
-        />
-        <StatCard 
-          title="총 기부 금액" 
-          value={`${(donationStats.data.totalAmount || 0).toLocaleString()}원`} 
-          icon="💰" 
-          color="bg-purple-500" 
-        />
-      </div>
-      
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-xl font-semibold mb-4">오늘의 질문</h2>
-          {todayQuestion.data ? (
-            <div>
-              <p className="text-lg mb-2">{todayQuestion.data.question.text}</p>
-              <div className="ml-4 mt-2">
-                {todayQuestion.data.question.options.map((option, index) => (
-                  <div key={index} className="mb-1">
-                    <span className={index === todayQuestion.data.question.correctOption ? 'font-bold text-green-600' : ''}>
-                      {index + 1}. {option}
-                    </span>
-                    {index === todayQuestion.data.question.correctOption && ' ✓'}
-                  </div>
-                ))}
-              </div>
-            </div>
-          ) : (
-            <p className="text-gray-500">오늘의 질문이 없습니다.</p>
-          )}
-        </div>
+
+  useEffect(() => {
+    const fetchTodayQuestion = async () => {
+      try {
+        setIsLoading(true);
+        const response = await questionsAPI.getTodayQuestion();
+        setTodayQuestion(response);
         
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-xl font-semibold mb-4">최근 기부</h2>
-          {donationStats.data.recentDonations && donationStats.data.recentDonations.length > 0 ? (
-            <ul>
-              {donationStats.data.recentDonations.map((donation) => (
-                <li key={donation.id} className="border-b py-2 last:border-0">
-                  <div className="flex justify-between">
-                    <span>{donation.user.nickname || '익명'}</span>
-                    <span className="font-semibold">{donation.amount.toLocaleString()}원</span>
-                  </div>
-                  <p className="text-sm text-gray-500">
-                    {new Date(donation.approvedAt).toLocaleDateString()}
-                  </p>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-gray-500">최근 기부 내역이 없습니다.</p>
-          )}
-        </div>
+        // 사용자 통계 설정
+        if (user) {
+          setStats({
+            totalAnswered: user.totalAnswered || 0,
+            correctAnswers: user.correctAnswers || 0,
+            accuracy: user.totalAnswered 
+              ? Math.round((user.correctAnswers / user.totalAnswered) * 100) 
+              : 0
+          });
+        }
+      } catch (error) {
+        console.error('오늘의 질문 로딩 중 오류:', error);
+        setError('오늘의 질문을 불러오는 중 오류가 발생했습니다.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchTodayQuestion();
+  }, [user]);
+
+  const handleAnswerSubmit = () => {
+    if (selectedAnswer === null) return;
+    
+    // 정답 확인
+    const isAnswerCorrect = selectedAnswer === todayQuestion.correctOption;
+    setIsCorrect(isAnswerCorrect);
+    setIsAnswered(true);
+    setShowExplanation(true);
+    
+    // 실제 환경에서는 여기서 서버에 응답을 기록하는 API 호출을 해야 합니다
+    // 예: responseAPI.submitAnswer(todayQuestion.id, selectedAnswer);
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col min-h-screen bg-gray-50">
+        <Navbar />
+        <Loading />
       </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col min-h-screen bg-gray-50">
+      <Navbar />
+      
+      <div className="container flex flex-col flex-grow px-4 py-8 mx-auto md:px-6">
+        {/* 헤더 */}
+        <DashboardHeader user={user} error={error} />
+        
+        {/* 통계 영역 */}
+        <StatsOverview stats={stats} />
+        
+        {/* 질문 카드 */}
+        <QuestionCard 
+          todayQuestion={todayQuestion}
+          selectedAnswer={selectedAnswer}
+          setSelectedAnswer={setSelectedAnswer}
+          isAnswered={isAnswered}
+          isCorrect={isCorrect}
+          handleAnswerSubmit={handleAnswerSubmit}
+        />
+        
+        {/* 도움말 섹션 */}
+        <HelpSection onLogout={logout} />
+      </div>
+      
+      <Footer />
     </div>
   );
-}
+};
 
 export default DashboardPage;

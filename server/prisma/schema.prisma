@@ -8,16 +8,24 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum UserRole {
+  user
+  admin
+}
+
 model User {
-  id            Int      @id @default(autoincrement())
-  kakaoId       String   @unique
+  id            Int       @id @default(autoincrement())
+  kakaoId       String?   @unique
+  email         String?   @unique
+  password      String?   // 관리자용 비밀번호 (해시됨)
   nickname      String?
   profileImage  String?
-  isSubscribed  Boolean  @default(true)
-  totalAnswered Int      @default(0)
-  correctAnswers Int     @default(0)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  isSubscribed  Boolean   @default(true)
+  totalAnswered Int       @default(0)
+  correctAnswers Int      @default(0)
+  role          UserRole  @default(user)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
   responses    Response[]
   donations    Donation[]
@@ -26,6 +34,7 @@ model User {
 model Question {
   id          Int      @id @default(autoincrement())
   text        String
+  description String?  // 질문에 대한 설명 추가
   options     Json     // ["옵션1", "옵션2", "옵션3", "옵션4"]
   correctOption Int    // 올바른 옵션의 인덱스 (0 기반)
   explanation String

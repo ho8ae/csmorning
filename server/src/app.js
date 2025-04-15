@@ -4,6 +4,8 @@ const helmet = require('helmet');
 const morgan = require('morgan');
 const path = require('path');
 
+const { setupSwagger } = require('./config/swagger');
+
 // 미들웨어 임포트
 const prismaMiddleware = require('./middleware/prisma.middleware');
 const { notFoundMiddleware, errorHandlerMiddleware } = require('./middleware/error.middleware');
@@ -13,6 +15,8 @@ const questionRoutes = require('./api/question/question.routes');
 const webhookRoutes = require('./api/webhook/webhook.routes');
 const donationRoutes = require('./api/donation/donation.routes');
 const adminRoutes = require('./api/admin/admin.routes');
+const authRoutes = require('./api/auth/auth.routes');
+
 
 // Express 앱 초기화
 const app = express();
@@ -24,6 +28,9 @@ app.use(cors());
 app.use(helmet());
 app.use(morgan('dev'));
 
+// Swagger 설정
+setupSwagger(app);
+
 // 정적 파일 서빙
 app.use(express.static(path.join(__dirname, '../public')));
 
@@ -31,10 +38,11 @@ app.use(express.static(path.join(__dirname, '../public')));
 app.use(prismaMiddleware);
 
 // 라우트 설정
-app.use('/api/questions', questionRoutes);
+app.use('/questions', questionRoutes);
 app.use('/webhook', webhookRoutes);
-app.use('/api/donation', donationRoutes);
-app.use('/api/admin', adminRoutes);
+app.use('/donation', donationRoutes);
+app.use('/admin', adminRoutes);
+app.use('/auth', authRoutes);
 
 // 기본 경로
 app.get('/', (req, res) => {

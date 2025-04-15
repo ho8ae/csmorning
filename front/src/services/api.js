@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // API 기본 URL 설정
-const API_URL = import.meta.env.REACT_APP_API_URL || 'https://csmorning.co.kr/api';
+const API_URL = import.meta.env.VITE_API_URL || 'https://csmorning.co.kr/';
 
 // Axios 인스턴스 생성
 const apiClient = axios.create({
@@ -14,9 +14,9 @@ const apiClient = axios.create({
 // 요청 인터셉터 - 모든 요청에 인증 토큰 추가
 apiClient.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('admin_token');
+    const token = localStorage.getItem('auth_token');
     if (token) {
-      config.headers['x-api-key'] = token;
+      config.headers['Authorization'] = `Bearer ${token}`;
     }
     return config;
   },
@@ -31,8 +31,10 @@ apiClient.interceptors.response.use(
   (error) => {
     if (error.response && error.response.status === 401) {
       // 인증 에러 - 로그인 페이지로 리다이렉트
-      localStorage.removeItem('admin_token');
-      window.location.href = '/admin/login';
+      localStorage.removeItem('auth_token');
+      // 관리자 페이지인 경우 관리자 로그인으로, 아니면 기본 로그인으로 리다이렉트
+      const isAdminPage = window.location.pathname.startsWith('/admin');
+      window.location.href = isAdminPage ? '/login' : '/';
     }
     return Promise.reject(error);
   }
@@ -40,16 +42,28 @@ apiClient.interceptors.response.use(
 
 // 인증 관련 API
 export const authAPI = {
+  // 일반 관리자 로그인
   login: async (credentials) => {
-    const response = await apiClient.post('/admin/login', credentials);
-    return response.data;
+    const response = await apiClient.post('/auth/login', credentials);
+    return response.data.data;
   },
+  
+  // 카카오 로그인 처리
+  kakaoLogin: async (code) => {
+    const response = await apiClient.post('/auth/kakao', { code });
+    return response.data.data;
+  },
+  
+  // 로그아웃
   logout: () => {
-    localStorage.removeItem('admin_token');
+    localStorage.removeItem('auth_token');
+    return apiClient.post('/auth/logout');
   },
-  checkAuth: async () => {
-    const response = await apiClient.get('/admin/check-auth');
-    return response.data;
+  
+  // 현재 사용자 정보 확인
+  getMe: async () => {
+    const response = await apiClient.get('/auth/me');
+    return response.data.data;
   },
 };
 
@@ -57,19 +71,19 @@ export const authAPI = {
 export const questionsAPI = {
   getAll: async (filters = {}) => {
     const response = await apiClient.get('/questions', { params: filters });
-    return response.data;
+    return response.data.data;
   },
   getById: async (id) => {
     const response = await apiClient.get(`/questions/${id}`);
-    return response.data;
+    return response.data.data;
   },
   create: async (questionData) => {
     const response = await apiClient.post('/questions', questionData);
-    return response.data;
+    return response.data.data;
   },
   update: async (id, questionData) => {
     const response = await apiClient.put(`/questions/${id}`, questionData);
-    return response.data;
+    return response.data.data;
   },
   delete: async (id) => {
     const response = await apiClient.delete(`/questions/${id}`);
@@ -81,7 +95,7 @@ export const questionsAPI = {
   },
   getTodayQuestion: async () => {
     const response = await apiClient.get('/questions/today/question');
-    return response.data;
+    return response.data.data;
   },
 };
 
@@ -89,15 +103,15 @@ export const questionsAPI = {
 export const usersAPI = {
   getAll: async () => {
     const response = await apiClient.get('/admin/users');
-    return response.data;
+    return response.data.data;
   },
   getById: async (id) => {
     const response = await apiClient.get(`/admin/users/${id}`);
-    return response.data;
+    return response.data.data;
   },
   update: async (id, userData) => {
     const response = await apiClient.put(`/admin/users/${id}`, userData);
-    return response.data;
+    return response.data.data;
   },
 };
 
@@ -105,11 +119,11 @@ export const usersAPI = {
 export const donationsAPI = {
   getAll: async () => {
     const response = await apiClient.get('/admin/donations');
-    return response.data;
+    return response.data.data;
   },
   getStats: async () => {
     const response = await apiClient.get('/admin/stats/donations');
-    return response.data;
+    return response.data.data;
   },
 };
 
@@ -117,11 +131,11 @@ export const donationsAPI = {
 export const statsAPI = {
   getResponseStats: async () => {
     const response = await apiClient.get('/admin/stats/responses');
-    return response.data;
+    return response.data.data;
   },
   getDonationStats: async () => {
     const response = await apiClient.get('/admin/stats/donations');
-    return response.data;
+    return response.data.data;
   },
 };
 

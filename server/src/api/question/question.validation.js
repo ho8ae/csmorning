@@ -6,6 +6,8 @@ const createQuestionSchema = Joi.object({
     'string.empty': '질문 내용은 필수 입력 항목입니다',
     'any.required': '질문 내용은 필수 입력 항목입니다'
   }),
+
+  description: Joi.string().allow('', null), 
   
   options: Joi.array().items(Joi.string()).min(2).required().messages({
     'array.base': '옵션은 배열 형태여야 합니다',
@@ -42,6 +44,8 @@ const updateQuestionSchema = Joi.object({
   text: Joi.string().messages({
     'string.empty': '질문 내용이 비어있을 수 없습니다'
   }),
+
+  description: Joi.string().allow('', null), 
   
   options: Joi.array().items(Joi.string()).min(2).messages({
     'array.base': '옵션은 배열 형태여야 합니다',

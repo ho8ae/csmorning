@@ -50,7 +50,7 @@ const getQuestionById = async (req, res, next) => {
  */
 const createQuestion = async (req, res, next) => {
   try {
-    const { text, options, correctOption, explanation, category, difficulty } = req.body;
+    const { text, options, description ,correctOption, explanation, category, difficulty } = req.body;
     
     // 필수 필드 검증
     if (!text || !options || correctOption === undefined || !explanation || !category) {
@@ -79,6 +79,7 @@ const createQuestion = async (req, res, next) => {
     // 질문 생성
     const newQuestion = await questionService.createQuestion(req.prisma, {
       text,
+      description,
       options,
       correctOption,
       explanation,
