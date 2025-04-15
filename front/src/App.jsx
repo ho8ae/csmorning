@@ -37,6 +37,8 @@ function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/auth/kakao/callback" element={<KakaoCallbackPage />} />
 
+        <Route path="/kakao-callback" element={<KakaoCallbackPage />} />
+
         {/* 사용자 인증 라우트 */}
         <Route path="/dashboard" element={<DashboardPage />} />
 
