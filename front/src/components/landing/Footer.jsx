@@ -1,4 +1,22 @@
+import React, { useState } from 'react';
+import Modal from '../common/Modal';
+import TermsContent from './TermsContent';
+import PrivacyContent from './PrivacyContent';
+
 const Footer = () => {
+    const [isTermsModalOpen, setIsTermsModalOpen] = useState(false);
+    const [isPrivacyModalOpen, setIsPrivacyModalOpen] = useState(false);
+
+    const openTermsModal = (e) => {
+        e.preventDefault();
+        setIsTermsModalOpen(true);
+    };
+
+    const openPrivacyModal = (e) => {
+        e.preventDefault();
+        setIsPrivacyModalOpen(true);
+    };
+
     return (
       <footer className="bg-blue-950 text-blue-200 py-10">
         <div className="container mx-auto px-6">
@@ -10,7 +28,6 @@ const Footer = () => {
                 <p className="text-sm md:text-left">대표자: 김태호</p>
                 <p className="text-sm md:text-left">주소: 경기도 다산동 4025-33 A-202 </p>
                 <p className="text-sm md:text-left">이메일: xogh2242@gmail.com</p>
-
             </div>
             
             <div className="grid grid-cols-2 md:grid-cols-3 gap-8">
@@ -63,11 +80,29 @@ const Footer = () => {
           <div className="border-t border-blue-800 mt-10 pt-6 text-sm text-center md:text-left md:flex md:justify-between">
             <p>&copy; {new Date().getFullYear()} CS Morning. All rights reserved.</p>
             <div className="mt-4 md:mt-0">
-              <a href="#" className="text-blue-300 hover:text-yellow-300 mx-2">개인정보처리방침</a>
-              <a href="#" className="text-blue-300 hover:text-yellow-300 mx-2">이용약관</a>
+              <a href="#" onClick={openPrivacyModal} className="text-blue-300 hover:text-yellow-300 mx-2">개인정보처리방침</a>
+              <a href="#" onClick={openTermsModal} className="text-blue-300 hover:text-yellow-300 mx-2">이용약관</a>
             </div>
           </div>
         </div>
+
+        {/* 이용약관 모달 */}
+        <Modal 
+          isOpen={isTermsModalOpen} 
+          onClose={() => setIsTermsModalOpen(false)} 
+          title="이용약관"
+        >
+          <TermsContent />
+        </Modal>
+
+        {/* 개인정보처리방침 모달 */}
+        <Modal 
+          isOpen={isPrivacyModalOpen} 
+          onClose={() => setIsPrivacyModalOpen(false)} 
+          title="개인정보처리방침"
+        >
+          <PrivacyContent />
+        </Modal>
       </footer>
     );
   };
