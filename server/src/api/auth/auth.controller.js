@@ -35,6 +35,21 @@ const kakaoLogin = async (req, res, next) => {
 };
 
 /**
+ * 카카오 로그인 리다이렉트 처리
+ */
+const redirectToFrontendCallback = async (req, res) => {
+    const { code } = req.query;
+  
+    if (!code) {
+      return res.status(400).send('Missing code');
+    }
+  
+    const redirectUrl = `${process.env.SERVICE_URL}/kakao/callback?code=${code}`;
+    return res.redirect(redirectUrl);
+  };
+  
+
+/**
  * 현재 인증된 사용자 정보 조회
  */
 const getMe = async (req, res, next) => {
@@ -65,5 +80,6 @@ module.exports = {
   login,
   kakaoLogin,
   getMe,
-  logout
+  logout,
+  redirectToFrontendCallback
 };

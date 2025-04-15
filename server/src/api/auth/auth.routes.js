@@ -17,4 +17,8 @@ router.get('/me', isAuthenticated, authController.getMe);
 // 로그아웃
 router.post('/logout', authController.logout);
 
+// 카카오 로그인 리다이렉트 처리
+router.get('/kakao/callback', authController.redirectToFrontendCallback);
+
+
 module.exports = router;
