@@ -3,9 +3,7 @@ import axios from 'axios';
 // API 기본 URL 설정
 
 const isProd = import.meta.env.MODE === 'production';
-const API_URL =
-  import.meta.env.VITE_API_URL ||
-  (isProd ? 'https://csmorning.co.kr' : 'http://localhost:3000');
+const API_URL = isProd ? 'https://csmorning.co.kr' : 'http://localhost:3000';
 
 // Axios 인스턴스 생성
 const apiClient = axios.create({
@@ -26,7 +24,7 @@ apiClient.interceptors.request.use(
   },
   (error) => {
     return Promise.reject(error);
-  }
+  },
 );
 
 // 응답 인터셉터 - 에러 처리
@@ -41,7 +39,7 @@ apiClient.interceptors.response.use(
       window.location.href = isAdminPage ? '/login' : '/';
     }
     return Promise.reject(error);
-  }
+  },
 );
 
 // 인증 관련 API
@@ -51,19 +49,19 @@ export const authAPI = {
     const response = await apiClient.post('/auth/login', credentials);
     return response.data.data;
   },
-  
+
   // 카카오 로그인 처리
   kakaoLogin: async (code) => {
     const response = await apiClient.post('/auth/kakao', { code });
     return response.data.data;
   },
-  
+
   // 로그아웃
   logout: () => {
     localStorage.removeItem('auth_token');
     return apiClient.post('/auth/logout');
   },
-  
+
   // 현재 사용자 정보 확인
   getMe: async () => {
     const response = await apiClient.get('/auth/me');
@@ -94,7 +92,9 @@ export const questionsAPI = {
     return response.data;
   },
   sendQuestion: async (questionId) => {
-    const response = await apiClient.post('/admin/questions/send', { questionId });
+    const response = await apiClient.post('/admin/questions/send', {
+      questionId,
+    });
     return response.data;
   },
   getTodayQuestion: async () => {
