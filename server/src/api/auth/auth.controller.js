@@ -88,10 +88,40 @@ const logout = async (req, res) => {
   });
 };
 
+
+/**
+ * 카카오 챗봇 계정 연동
+ */
+const linkKakaoChannel = async (req, res) => {
+  try {
+    const { linkCode } = req.body;
+    const userId = req.user.id; // 현재 로그인한 사용자 ID
+    
+    if (!linkCode) {
+      return res.status(400).json({
+        success: false,
+        message: '연동 코드가 제공되지 않았습니다.'
+      });
+    }
+    
+    // 계정 연동 수행
+    const result = await webhookService.linkUserAccounts(req.prisma, linkCode, userId);
+    
+    return res.status(result.success ? 200 : 400).json(result);
+  } catch (error) {
+    console.error('카카오 챗봇 계정 연동 중 오류 발생:', error);
+    return res.status(500).json({
+      success: false,
+      message: '서버 오류가 발생했습니다.'
+    });
+  }
+};
+
 module.exports = {
   login,
   kakaoLogin,
   getMe,
   logout,
-  redirectToFrontendCallback
+  redirectToFrontendCallback,
+  linkKakaoChannel
 };

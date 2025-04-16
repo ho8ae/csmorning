@@ -29,6 +29,7 @@ model User {
 
   responses    Response[]
   donations    Donation[]
+  kakaoMappings   UserKakaoMapping[]
 }
 
 model Question {
@@ -84,4 +85,16 @@ model AppConfig {
   key     String   @id // 설정 키 (예: 'kakao_tokens')
   value   String   // JSON 형식의 설정 값
   updatedAt DateTime @default(now()) @updatedAt
+}
+
+model UserKakaoMapping {
+  id              Int      @id @default(autoincrement())
+  userId          Int
+  user            User     @relation(fields: [userId], references: [id])
+  kakaoChannelId  String   @unique  // 카카오톡 채널 사용자 ID (해시)
+  kakaoId         String?  // 카카오 로그인 API ID (숫자)
+  linkCode        String?  // 연동 코드
+  linkCodeExpiry  DateTime? // 연동 코드 만료 시간
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 }

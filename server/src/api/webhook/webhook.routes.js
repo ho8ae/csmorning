@@ -3,7 +3,7 @@ const router = express.Router();
 const webhookController = require('./webhook.controller');
 const validate = require('../../middleware/validation.middleware');
 const webhookValidation = require('./webhook.validation');
-
+const { isAuthenticated } = require('../../middleware/auth.middleware');
 // 카카오톡 챗봇 스킬 
 router.post('/message', webhookController.handleKakaoMessage);
 
@@ -25,5 +25,9 @@ router.get('/message', (req, res) => {
     }
   });
 });
+
+
+router.post('/link-account', isAuthenticated, webhookController.handleAccountLinking);
+
 
 module.exports = router;

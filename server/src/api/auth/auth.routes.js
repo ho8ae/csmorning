@@ -5,6 +5,7 @@ const { isAuthenticated } = require('../../middleware/auth.middleware');
 const validate = require('../../middleware/validation.middleware');
 const authValidation = require('./auth.validation');
 
+
 // 관리자 로그인
 router.post('/login', validate(authValidation.loginSchema), authController.login);
 
@@ -19,6 +20,8 @@ router.post('/logout', authController.logout);
 
 // 카카오 로그인 리다이렉트 처리
 router.get('/kakao/callback', authController.redirectToFrontendCallback);
+
+router.post('/link-kakao-channel', isAuthenticated , authController.linkKakaoChannel); //auth.required
 
 
 module.exports = router;
