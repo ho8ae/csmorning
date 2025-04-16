@@ -22,7 +22,7 @@ const login = async (req, res, next) => {
  */
 const kakaoLogin = async (req, res, next) => {
   try {
-    const { code } = req.body;
+    const code = req.query.code; 
     const result = await authService.processKakaoLogin(code);
     
     return res.status(200).json({

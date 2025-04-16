@@ -52,7 +52,7 @@ export const authAPI = {
 
   // 카카오 로그인 처리
   kakaoLogin: async (code) => {
-    const response = await apiClient.post('/auth/kakao', { code });
+    const response = await apiClient.get('/auth/kakao', { code });
     return response.data.data;
   },
 
