@@ -21,18 +21,30 @@ const login = async (req, res, next) => {
  * 카카오 로그인 처리
  */
 const kakaoLogin = async (req, res, next) => {
-  try {
-    const code = req.query.code; 
-    const result = await authService.processKakaoLogin(code);
-    
-    return res.status(200).json({
-      success: true,
-      data: result
-    });
-  } catch (error) {
-    next(error);
-  }
-};
+    console.log('카카오 로그인 요청 받음:', req.query);
+    try {
+      const code = req.query.code;
+      if (!code) {
+        console.log('코드 누락됨');
+        return res.status(400).json({
+          success: false,
+          message: '인증 코드가 필요합니다.'
+        });
+      }
+      
+      console.log('인증 코드로 처리 시작:', code);
+      const result = await authService.processKakaoLogin(code);
+      
+      console.log('카카오 로그인 성공:', result);
+      return res.status(200).json({
+        success: true,
+        data: result
+      });
+    } catch (error) {
+      console.error('카카오 로그인 처리 에러:', error);
+      next(error);
+    }
+  };
 
 /**
  * 카카오 로그인 리다이렉트 처리
