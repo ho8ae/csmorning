@@ -11,13 +11,13 @@ const KAKAO_API_URL = 'https://kapi.kakao.com';
  */
 async function sendMessage(userId, template) {
   try {
-    // 카카오 채널 메시지 API 호출
+    // 카카오 채널 메시지 API 호출 - URL 경로 수정
     const response = await axios({
       method: 'post',
-      url: `${KAKAO_API_URL}/v1/api/talk/channels/msg/send`,
+      url: `${KAKAO_API_URL}/v1/api/talk/friends/message/default/send`,
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
-        'Authorization': `KakaoAK ${process.env.KAKAO_ADMIN_KEY}`
+        'Authorization': `Bearer ${process.env.KAKAO_ACCESS_TOKEN}` // KakaoAK에서 Bearer로 변경
       },
       data: {
         receiver_uuids: JSON.stringify([userId]),
@@ -30,6 +30,26 @@ async function sendMessage(userId, template) {
     console.error('카카오톡 메시지 전송 실패:', error.response?.data || error.message);
     throw error;
   }
+}
+
+/**
+ * 카카오봇 메시지 전송 (챗봇 스킬 응답용)
+ * @param {object} responseBody - 카카오 응답 바디
+ * @returns {object} 포맷된 응답 객체
+ */
+function formatSkillResponse(text) {
+  return {
+    version: "2.0",
+    template: {
+      outputs: [
+        {
+          simpleText: {
+            text: text
+          }
+        }
+      ]
+    }
+  };
 }
 
 /**
@@ -114,6 +134,7 @@ async function approvePayment(tid, orderCode, userId, pgToken) {
 
 module.exports = {
   sendMessage,
+  formatSkillResponse,
   createPaymentRequest,
   approvePayment
 };

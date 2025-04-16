@@ -1,19 +1,33 @@
 const Joi = require('joi');
 
-// 메시지 웹훅 유효성 검사 스키마
 const messageSchema = Joi.object({
-  user_id: Joi.string().required().messages({
-    'string.empty': '사용자 ID는 필수 입력 항목입니다',
-    'any.required': '사용자 ID는 필수 입력 항목입니다'
-  }),
+  // 카카오 챗봇 스킬 API 스키마
+  userRequest: Joi.object({
+    user: Joi.object({
+      id: Joi.string().required(),
+      properties: Joi.object().optional()
+    }).required(),
+    utterance: Joi.string().required(),
+    params: Joi.object().optional(),
+    timezone: Joi.string().optional(),
+    lang: Joi.string().optional()
+  }).required(),
   
-  content: Joi.string().allow('', null),
+  action: Joi.object({
+    name: Joi.string().optional(),
+    clientExtra: Joi.object().optional(),
+    params: Joi.object().optional(),
+    id: Joi.string().optional(),
+    detailParams: Joi.object().optional()
+  }).required(),
   
-  type: Joi.string().required().messages({
-    'string.empty': '메시지 타입은 필수 입력 항목입니다',
-    'any.required': '메시지 타입은 필수 입력 항목입니다'
-  })
-});
+  bot: Joi.object({
+    id: Joi.string().optional(),
+    name: Joi.string().optional()
+  }).optional(),
+  
+  contexts: Joi.array().optional()
+}).unknown(true);
 
 module.exports = {
   messageSchema
