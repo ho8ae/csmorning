@@ -38,11 +38,11 @@ app.use(express.static(path.join(__dirname, '../public')));
 app.use(prismaMiddleware);
 
 // 라우트 설정
-app.use('api/questions', questionRoutes);
-app.use('api/webhook', webhookRoutes);
-app.use('api/donation', donationRoutes);
-app.use('api/admin', adminRoutes);
-app.use('api/auth', authRoutes);
+app.use('/api/questions', questionRoutes);
+app.use('/api/webhook', webhookRoutes);
+app.use('/api/donation', donationRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/auth', authRoutes);
 
 // 기본 경로
 app.get('/', (req, res) => {
