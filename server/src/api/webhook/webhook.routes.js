@@ -11,4 +11,7 @@ router.post(
   webhookController.handleKakaoMessage
 );
 
+// 테스트
+router.post('/test', webhookController.testEndpoint);
+
 module.exports = router;

@@ -132,6 +132,24 @@ const sendMessage = async (userId, text) => {
   return kakaoService.sendMessage(userId, template);
 };
 
+const testEndpoint = (req, res) => {
+  const responseBody = {
+    version: "2.0",
+    template: {
+      outputs: [
+        {
+          simpleText: {
+            text: "테스트 응답입니다."
+          }
+        }
+      ]
+    }
+  };
+  
+  return res.status(200).json(responseBody);
+};
+
 module.exports = {
-  handleKakaoMessage
+  handleKakaoMessage,
+  testEndpoint
 };
