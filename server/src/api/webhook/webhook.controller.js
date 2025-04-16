@@ -123,6 +123,13 @@ const handleKakaoMessage = async (req, res, next) => {
           }
         }
       }
+    } else if (utterance.includes('계정 연동')) {
+      // 계정 연동 코드 생성 후 반환
+      const linkCode = await webhookService.generateLinkCode(
+        req.prisma,
+        userId,
+      );
+      responseText = `계정 연동 코드가 생성되었습니다.\n\n코드: ${linkCode}\n\nCS Morning 웹사이트(csmorning.co.kr)에서 계정 연동 메뉴를 선택한 후 이 코드를 입력해주세요. 연동 코드는 10분간 유효합니다.`;
     } else if (utterance.includes('구독')) {
       if (utterance.includes('취소') || utterance.includes('해지')) {
         await req.prisma.user.update({
@@ -139,13 +146,6 @@ const handleKakaoMessage = async (req, res, next) => {
         responseText =
           'CS Morning을 구독해주셔서 감사합니다! 매일 아침 8시에 CS 지식을 보내드립니다.';
       }
-    } else if (utterance.includes('계정') && utterance.includes('연동')) {
-      // 계정 연동 코드 생성 후 반환
-      const linkCode = await webhookService.generateLinkCode(
-        req.prisma,
-        userId,
-      );
-      responseText = `계정 연동 코드가 생성되었습니다.\n\n코드: ${linkCode}\n\nCS Morning 웹사이트(csmorning.co.kr)에서 계정 연동 메뉴를 선택한 후 이 코드를 입력해주세요. 연동 코드는 10분간 유효합니다.`;
     } else {
       responseText =
         "죄송합니다. 이해하지 못했어요. '도움말'을 입력하시면 사용 가능한 명령어를 확인할 수 있습니다.";
@@ -177,6 +177,11 @@ const handleKakaoMessage = async (req, res, next) => {
             label: '도움말',
             action: 'message',
             messageText: '도움말',
+          },
+          {
+            label: '계정 연동하기',
+            action: 'message',
+            messageText: '계정 연동',
           },
         ],
       },
@@ -210,77 +215,81 @@ const handleKakaoMessage = async (req, res, next) => {
 const handleAccountLinking = async (req, res, next) => {
   try {
     const { userRequest } = req.body;
-    
+
     if (!userRequest || !userRequest.user || !userRequest.user.id) {
       return res.status(400).json({
-        version: "2.0",
+        version: '2.0',
         template: {
-          outputs: [{
-            simpleText: {
-              text: "유효하지 않은 요청입니다."
-            }
-          }]
-        }
+          outputs: [
+            {
+              simpleText: {
+                text: '유효하지 않은 요청입니다.',
+              },
+            },
+          ],
+        },
       });
     }
-    
+
     const kakaoChannelId = userRequest.user.id;
-    
+
     // 연동 코드 생성
-    const linkCode = await webhookService.generateLinkCode(req.prisma, kakaoChannelId);
-    
+    const linkCode = await webhookService.generateLinkCode(
+      req.prisma,
+      kakaoChannelId,
+    );
+
     // 서비스 도메인
-    const serviceDomain = process.env.NODE_ENV === 'production' 
-      ? 'https://csmorning.co.kr' 
-      : 'http://localhost:5173';
-    
+    const serviceDomain =
+      process.env.NODE_ENV === 'production'
+        ? 'https://csmorning.co.kr'
+        : 'http://localhost:5173';
+
     // 카카오 챗봇 응답
     const responseBody = {
-      version: "2.0",
+      version: '2.0',
       template: {
         outputs: [
           {
             simpleText: {
-              text: `계정 연동 코드가 생성되었습니다.\n\n코드: ${linkCode}\n\n아래 '계정 연동하기' 버튼을 클릭하면 자동으로 연동됩니다. 또는 CS Morning 웹사이트에서 계정 연동 메뉴를 선택한 후 이 코드를 입력해주세요. 연동 코드는 10분간 유효합니다.`
-            }
-          }
+              text: `계정 연동 코드가 생성되었습니다.\n\n코드: ${linkCode}\n\n아래 '계정 연동하기' 버튼을 클릭하면 자동으로 연동됩니다. 또는 CS Morning 웹사이트에서 계정 연동 메뉴를 선택한 후 이 코드를 입력해주세요. 연동 코드는 10분간 유효합니다.`,
+            },
+          },
         ],
         quickReplies: [
           {
-            label: "계정 연동하기",
-            action: "webLink",
-            webLinkUrl: `${serviceDomain}/kakao-link?code=${linkCode}`
+            label: '계정 연동하기',
+            action: 'webLink',
+            webLinkUrl: `${serviceDomain}/kakao-link?code=${linkCode}`,
           },
           {
-            label: "오늘의 질문",
-            action: "message",
-            messageText: "오늘의 질문"
-          }
-        ]
-      }
+            label: '오늘의 질문',
+            action: 'message',
+            messageText: '오늘의 질문',
+          },
+        ],
+      },
     };
-    
+
     res.setHeader('Content-Type', 'application/json; charset=utf-8');
     return res.status(200).json(responseBody);
   } catch (error) {
     console.error('계정 연동 처리 중 오류 발생:', error);
-    
+
     return res.status(200).json({
-      version: "2.0",
+      version: '2.0',
       template: {
         outputs: [
           {
             simpleText: {
-              text: "계정 연동 코드 생성 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요."
-            }
-          }
-        ]
-      }
+              text: '계정 연동 코드 생성 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.',
+            },
+          },
+        ],
+      },
     });
   }
 };
-
-
 
 /**
  * 테스트 엔드포인트
