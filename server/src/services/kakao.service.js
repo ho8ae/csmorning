@@ -1,7 +1,140 @@
 const axios = require('axios');
+const { prisma } = require('../config/db');
+const qs = require('qs');
 
 // 카카오 API 기본 URL
 const KAKAO_API_URL = 'https://kapi.kakao.com';
+const KAKAO_AUTH_URL = 'https://kauth.kakao.com';
+
+// 토큰 정보 저장 객체
+let tokenInfo = {
+  access_token: process.env.KAKAO_ACCESS_TOKEN,
+  refresh_token: process.env.KAKAO_REFRESH_TOKEN,
+  expires_at: null // 토큰 만료 시간
+};
+
+/**
+ * 토큰 갱신하기
+ * @returns {Promise<string>} 새로운 액세스 토큰
+ */
+async function refreshToken() {
+  try {
+    console.log('카카오 액세스 토큰 갱신 시도...');
+
+    // 환경에서 리프레시 토큰이 없다면 DB에서 가져오기 시도
+    if (!tokenInfo.refresh_token) {
+      const tokenRecord = await prisma.appConfig.findUnique({
+        where: { key: 'kakao_tokens' }
+      });
+
+      if (tokenRecord) {
+        const tokens = JSON.parse(tokenRecord.value);
+        tokenInfo = {
+          ...tokenInfo,
+          ...tokens
+        };
+      }
+    }
+
+    if (!tokenInfo.refresh_token) {
+      throw new Error('리프레시 토큰이 없습니다. 관리자 페이지에서 카카오 계정을 다시 연결해주세요.');
+    }
+
+    // 토큰 갱신 요청
+    const response = await axios({
+      method: 'post',
+      url: `${KAKAO_AUTH_URL}/oauth/token`,
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      data: qs.stringify({
+        grant_type: 'refresh_token',
+        client_id: process.env.KAKAO_REST_API_TEST_KEY,
+        refresh_token: tokenInfo.refresh_token
+      })
+    });
+
+    // 새 토큰 정보 저장
+    const newTokenInfo = response.data;
+    
+    // 응답에 액세스 토큰이 있는지 확인
+    if (!newTokenInfo.access_token) {
+      throw new Error('액세스 토큰 갱신 실패: 응답에 액세스 토큰이 없습니다.');
+    }
+    
+    // 토큰 정보 업데이트
+    tokenInfo.access_token = newTokenInfo.access_token;
+    
+    // 새 리프레시 토큰이 제공된 경우에만 업데이트
+    if (newTokenInfo.refresh_token) {
+      tokenInfo.refresh_token = newTokenInfo.refresh_token;
+    }
+    
+    // 만료 시간 계산 (초 단위를 밀리초로 변환하여 현재 시간에 더함)
+    tokenInfo.expires_at = Date.now() + (newTokenInfo.expires_in * 1000);
+
+    // DB에 토큰 정보 저장
+    await prisma.appConfig.upsert({
+      where: { key: 'kakao_tokens' },
+      update: { 
+        value: JSON.stringify({
+          access_token: tokenInfo.access_token,
+          refresh_token: tokenInfo.refresh_token,
+          expires_at: tokenInfo.expires_at
+        })
+      },
+      create: {
+        key: 'kakao_tokens',
+        value: JSON.stringify({
+          access_token: tokenInfo.access_token,
+          refresh_token: tokenInfo.refresh_token,
+          expires_at: tokenInfo.expires_at
+        })
+      }
+    });
+
+    console.log('카카오 액세스 토큰 갱신 성공');
+    return tokenInfo.access_token;
+  } catch (error) {
+    console.error('카카오 토큰 갱신 실패:', error.response?.data || error.message);
+    throw error;
+  }
+}
+
+/**
+ * 유효한 액세스 토큰 가져오기
+ * @returns {Promise<string>} 유효한 액세스 토큰
+ */
+async function getValidAccessToken() {
+  try {
+    // DB에서 토큰 정보 가져오기 (토큰이 아직 메모리에 없는 경우)
+    if (!tokenInfo.access_token) {
+      const tokenRecord = await prisma.appConfig.findUnique({
+        where: { key: 'kakao_tokens' }
+      });
+
+      if (tokenRecord) {
+        const tokens = JSON.parse(tokenRecord.value);
+        tokenInfo = {
+          ...tokenInfo,
+          ...tokens
+        };
+      }
+    }
+
+    // 토큰 만료 확인 (만료 10분 전에 갱신)
+    const isExpired = tokenInfo.expires_at && (Date.now() > (tokenInfo.expires_at - 600000));
+    
+    if (!tokenInfo.access_token || isExpired) {
+      return await refreshToken();
+    }
+    
+    return tokenInfo.access_token;
+  } catch (error) {
+    console.error('토큰 가져오기 실패:', error);
+    throw error;
+  }
+}
 
 /**
  * 카카오톡 메시지 전송
@@ -11,13 +144,16 @@ const KAKAO_API_URL = 'https://kapi.kakao.com';
  */
 async function sendMessage(userId, template) {
   try {
-    // 카카오 채널 메시지 API 호출 - URL 경로 수정
+    // 유효한 액세스 토큰 가져오기
+    const accessToken = await getValidAccessToken();
+    
+    // 카카오 채널 메시지 API 호출
     const response = await axios({
       method: 'post',
       url: `${KAKAO_API_URL}/v1/api/talk/friends/message/default/send`,
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
-        'Authorization': `Bearer ${process.env.KAKAO_ACCESS_TOKEN}` // KakaoAK에서 Bearer로 변경
+        'Authorization': `Bearer ${accessToken}`
       },
       data: {
         receiver_uuids: JSON.stringify([userId]),
@@ -28,6 +164,19 @@ async function sendMessage(userId, template) {
     return response.data;
   } catch (error) {
     console.error('카카오톡 메시지 전송 실패:', error.response?.data || error.message);
+    
+    // 토큰 만료 오류인 경우 토큰 갱신 후 재시도
+    if (error.response?.data?.code === -401) {
+      try {
+        console.log('토큰 만료로 인한 재시도...');
+        await refreshToken();
+        return await sendMessage(userId, template); // 재귀적으로 다시 시도
+      } catch (refreshError) {
+        console.error('토큰 갱신 후 재시도 실패:', refreshError.message);
+        throw refreshError;
+      }
+    }
+    
     throw error;
   }
 }
@@ -132,9 +281,35 @@ async function approvePayment(tid, orderCode, userId, pgToken) {
   }
 }
 
+/**
+ * 서버 시작 시 토큰 초기화
+ */
+async function initializeToken() {
+  try {
+    // DB에서 토큰 정보 가져오기
+    const tokenRecord = await prisma.appConfig.findUnique({
+      where: { key: 'kakao_tokens' }
+    });
+
+    if (tokenRecord) {
+      const tokens = JSON.parse(tokenRecord.value);
+      tokenInfo = {
+        ...tokenInfo,
+        ...tokens
+      };
+      console.log('DB에서 카카오 토큰 정보를 불러왔습니다.');
+    } else {
+      console.log('DB에 저장된 카카오 토큰 정보가 없습니다.');
+    }
+  } catch (error) {
+    console.error('토큰 초기화 중 오류:', error);
+  }
+}
+
 module.exports = {
   sendMessage,
   formatSkillResponse,
   createPaymentRequest,
-  approvePayment
+  approvePayment,
+  initializeToken
 };

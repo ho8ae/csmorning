@@ -11,6 +11,9 @@ router.use(authAdmin);  // isAuthenticated와 isAdmin을 함께 체크하는 미
 // 사용자 관리
 router.get('/users', adminController.getAllUsers);
 
+//
+router.post('/kakao-tokens', adminController.setKakaoTokens);
+
 // 응답 통계
 router.get('/stats/responses', adminController.getResponseStats);
 

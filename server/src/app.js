@@ -5,6 +5,7 @@ const morgan = require('morgan');
 const path = require('path');
 
 const { setupSwagger } = require('./config/swagger');
+const kakaoService = require('./services/kakao.service');
 
 // 미들웨어 임포트
 const prismaMiddleware = require('./middleware/prisma.middleware');
@@ -48,6 +49,16 @@ app.use('/api/auth', authRoutes);
 app.get('/', (req, res) => {
   res.json({ message: 'CS Interview Bot API is running' });
 });
+
+// 서버 시작 시 카카오 토큰 초기화
+(async function initializeKakaoToken() {
+  try {
+    await kakaoService.initializeToken();
+    console.log('카카오 토큰이 초기화되었습니다.');
+  } catch (error) {
+    console.error('카카오 토큰 초기화 실패:', error.message);
+  }
+})();
 
 // 에러 핸들링 미들웨어
 app.use(notFoundMiddleware);

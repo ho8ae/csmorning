@@ -62,9 +62,56 @@ const sendQuestion = async (req, res, next) => {
   }
 };
 
+/**
+ * 카카오 토큰 설정 (관리자 전용)
+ */
+const setKakaoTokens = async (req, res, next) => {
+  try {
+    const { access_token, refresh_token } = req.body;
+    
+    if (!access_token || !refresh_token) {
+      return res.status(400).json({
+        success: false,
+        message: '액세스 토큰과 리프레시 토큰이 모두 필요합니다.'
+      });
+    }
+    
+    // 현재 시간 + 6시간으로 임시 만료시간 설정 (실제 토큰 만료시간을 알 수 없음)
+    const expires_at = Date.now() + (6 * 60 * 60 * 1000);
+    
+    // DB에 토큰 정보 저장
+    await prisma.appConfig.upsert({
+      where: { key: 'kakao_tokens' },
+      update: { 
+        value: JSON.stringify({
+          access_token,
+          refresh_token,
+          expires_at
+        })
+      },
+      create: {
+        key: 'kakao_tokens',
+        value: JSON.stringify({
+          access_token,
+          refresh_token,
+          expires_at
+        })
+      }
+    });
+    
+    return res.status(200).json({
+      success: true,
+      message: '카카오 토큰이 성공적으로 설정되었습니다.'
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getAllUsers,
   getResponseStats,
   getDonationStats,
-  sendQuestion
+  sendQuestion,
+  setKakaoTokens
 };

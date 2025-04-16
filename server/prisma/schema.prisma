@@ -79,3 +79,9 @@ model Donation {
   approvedAt      DateTime?
   createdAt       DateTime @default(now())
 }
+
+model AppConfig {
+  key     String   @id // 설정 키 (예: 'kakao_tokens')
+  value   String   // JSON 형식의 설정 값
+  updatedAt DateTime @default(now()) @updatedAt
+}
