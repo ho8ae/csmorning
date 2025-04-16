@@ -1,13 +1,12 @@
-
 import { motion } from 'framer-motion'; // eslint-disable-line no-unused-vars
 
-const QuestionCard = ({ 
-  todayQuestion, 
-  selectedAnswer, 
-  setSelectedAnswer, 
-  isAnswered, 
-  isCorrect, 
-  handleAnswerSubmit 
+const QuestionCard = ({
+  todayQuestion,
+  selectedAnswer,
+  setSelectedAnswer,
+  isAnswered,
+  isCorrect,
+  handleAnswerSubmit,
 }) => {
   if (!todayQuestion) {
     return (
@@ -17,7 +16,9 @@ const QuestionCard = ({
         transition={{ duration: 0.5, delay: 0.4 }}
         className="p-6 mx-auto mb-8 bg-white rounded-lg shadow-md max-w-3xl"
       >
-        <h2 className="mb-6 text-2xl font-bold text-center text-blue-900">오늘의 CS 문제</h2>
+        <h2 className="mb-6 text-2xl font-bold text-center text-blue-900">
+          오늘의 CS 문제
+        </h2>
         <div className="p-4 text-center text-gray-500">
           오늘의 질문이 없습니다. 다음에 다시 시도해주세요.
         </div>
@@ -32,17 +33,21 @@ const QuestionCard = ({
       transition={{ duration: 0.5, delay: 0.4 }}
       className="p-6 mx-auto mb-8 bg-white rounded-lg shadow-md max-w-3xl"
     >
-      <h2 className="mb-6 text-2xl font-bold text-center text-blue-900">오늘의 CS 문제</h2>
-      
+      <h2 className="mb-6 text-2xl font-bold text-center text-blue-900">
+        오늘의 CS 문제
+      </h2>
+
       <div className="p-4 mb-4 bg-blue-50 rounded-lg">
-        <p className="text-lg font-medium text-blue-800">{todayQuestion.text}</p>
+        <p className="text-lg font-medium text-blue-800">
+          {todayQuestion.text}
+        </p>
         {todayQuestion.description && (
           <p className="mt-2 text-blue-600">{todayQuestion.description}</p>
         )}
       </div>
-      
+
       <div className="mb-6 space-y-3">
-        {todayQuestion.options.map((option, index) => (
+        {(todayQuestion.options || []).map((option, index) => (
           <button
             key={index}
             onClick={() => !isAnswered && setSelectedAnswer(index)}
@@ -68,7 +73,7 @@ const QuestionCard = ({
           </button>
         ))}
       </div>
-      
+
       {!isAnswered ? (
         <button
           onClick={handleAnswerSubmit}
