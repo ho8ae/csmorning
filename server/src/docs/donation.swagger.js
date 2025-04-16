@@ -102,7 +102,7 @@
 
 /**
  * @swagger
- * /donation/coffee:
+ * /api/donation/coffee:
  *   post:
  *     summary: 커피값 기부 요청
  *     description: 커피값 기부를 위한 카카오페이 결제 요청을 생성합니다.
@@ -143,7 +143,7 @@
 
 /**
  * @swagger
- * /donation/success:
+ * /api/donation/success:
  *   get:
  *     summary: 결제 성공 처리
  *     description: 카카오페이 결제 성공 시 리다이렉트되는 엔드포인트입니다.
@@ -174,7 +174,7 @@
 
 /**
  * @swagger
- * /donation/cancel:
+ * /api/donation/cancel:
  *   get:
  *     summary: 결제 취소 처리
  *     description: 카카오페이 결제 취소 시 리다이렉트되는 엔드포인트입니다.
@@ -192,7 +192,7 @@
 
 /**
  * @swagger
- * /donation/fail:
+ * /api/donation/fail:
  *   get:
  *     summary: 결제 실패 처리
  *     description: 카카오페이 결제 실패 시 리다이렉트되는 엔드포인트입니다.

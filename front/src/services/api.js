@@ -3,7 +3,7 @@ import axios from 'axios';
 // API 기본 URL 설정
 
 const isProd = import.meta.env.VITE_MODE === 'production';
-const API_URL = isProd ? 'https://csmorning.co.kr' : 'http://localhost:3000';
+const API_URL = isProd ? 'https://csmorning.co.kr/api' : 'http://localhost:3000/api';
 
 // Axios 인스턴스 생성
 const apiClient = axios.create({
@@ -50,7 +50,7 @@ export const authAPI = {
     return response.data.data;
   },
 
-  // 방법 2: GET 방식으로 변경
+
 kakaoLogin: async (code) => {
   console.log('카카오 API 호출:', code);
   try {

@@ -107,7 +107,7 @@
 
 /**
  * @swagger
- * /admin/users:
+ * /api/admin/users:
  *   get:
  *     summary: 모든 사용자 조회
  *     description: 시스템에 등록된 모든 사용자 목록을 조회합니다.
@@ -139,7 +139,7 @@
 
 /**
  * @swagger
- * /admin/stats/responses:
+ * /api/admin/stats/responses:
  *   get:
  *     summary: 응답 통계 조회
  *     description: 사용자 응답에 대한 통계 정보를 조회합니다.
@@ -169,7 +169,7 @@
 
 /**
  * @swagger
- * /admin/stats/donations:
+ * /api/admin/stats/donations:
  *   get:
  *     summary: 기부 통계 조회
  *     description: 사용자 기부에 대한 통계 정보를 조회합니다.
@@ -199,7 +199,7 @@
 
 /**
  * @swagger
- * /admin/questions/send:
+ * /api/admin/questions/send:
  *   post:
  *     summary: 질문 수동 전송
  *     description: 선택한 질문을 모든 구독자에게 수동으로 전송합니다.

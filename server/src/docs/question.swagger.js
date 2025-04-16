@@ -190,7 +190,7 @@
 
 /**
  * @swagger
- * /questions:
+ * /api/questions:
  *   get:
  *     summary: 모든 질문 조회 (관리자용)
  *     description: 시스템에 등록된 모든 질문 목록을 조회합니다.
@@ -280,7 +280,7 @@
 
 /**
  * @swagger
- * /questions/{id}:
+ * /api/questions/{id}:
  *   get:
  *     summary: 단일 질문 조회 (관리자용)
  *     description: 특정 ID의 질문 상세 정보를 조회합니다.
@@ -464,7 +464,7 @@
 
 /**
  * @swagger
- * /questions/today/question:
+ * /api/questions/today/question:
  *   get:
  *     summary: 오늘의 질문 조회 (공개 API)
  *     description: 오늘의 질문을 조회합니다.

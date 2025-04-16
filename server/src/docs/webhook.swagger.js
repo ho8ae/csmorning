@@ -61,7 +61,7 @@
 
 /**
  * @swagger
- * /webhook/message:
+ * /api/webhook/message:
  *   post:
  *     summary: 카카오톡 메시지 웹훅 처리
  *     description: 카카오톡 챗봇으로부터 받은 메시지를 처리합니다.

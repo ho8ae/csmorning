@@ -70,7 +70,7 @@
 
 /**
  * @swagger
- * /auth/login:
+ * /api/auth/login:
  *   post:
  *     summary: 관리자 로그인
  *     description: 이메일과 비밀번호로 관리자 로그인을 합니다.
@@ -104,7 +104,7 @@
 
 /**
  * @swagger
- * /auth/kakao:
+ * /api/auth/kakao:
  *   post:
  *     summary: 카카오 로그인
  *     description: 카카오 인증 코드로 로그인을 처리합니다.
@@ -138,7 +138,7 @@
 
 /**
  * @swagger
- * /auth/me:
+ * /api/auth/me:
  *   get:
  *     summary: 현재 사용자 정보 조회
  *     description: 현재 인증된 사용자의 정보를 조회합니다.
@@ -182,7 +182,7 @@
 
 /**
  * @swagger
- * /auth/logout:
+ * /api/auth/logout:
  *   post:
  *     summary: 로그아웃
  *     description: 현재 세션에서 로그아웃합니다.
