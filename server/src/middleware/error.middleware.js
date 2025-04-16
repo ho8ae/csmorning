@@ -16,7 +16,7 @@ const notFoundMiddleware = (req, res, next) => {
       error: {
         message,
         status,
-        stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
+        stack: process.env.NODE_ENV === 'production' ? err.stack : undefined // 스택 트레이스는 프로덕션 환경에서는 숨김
       }
     });
   };
