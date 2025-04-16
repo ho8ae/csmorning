@@ -21,6 +21,7 @@ model User {
   nickname      String?
   profileImage  String?
   isSubscribed  Boolean   @default(true)
+  isTemporary   Boolean   @default(false)
   totalAnswered Int       @default(0)
   correctAnswers Int      @default(0)
   role          UserRole  @default(user)
