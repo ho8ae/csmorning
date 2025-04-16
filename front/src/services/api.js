@@ -50,11 +50,19 @@ export const authAPI = {
     return response.data.data;
   },
 
-  // 카카오 로그인 처리
-  kakaoLogin: async (code) => {
-    const response = await apiClient.get('/auth/kakao', { code });
+  // 방법 2: GET 방식으로 변경
+kakaoLogin: async (code) => {
+  console.log('카카오 API 호출:', code);
+  try {
+    // GET 방식으로 변경
+    const response = await apiClient.get('/auth/kakao', { params: { code } });
+    console.log('카카오 로그인 응답:', response.data);
     return response.data.data;
-  },
+  } catch (error) {
+    console.error('카카오 API 에러:', error.response?.data || error.message);
+    throw error;
+  }
+},
 
   // 로그아웃
   logout: () => {
