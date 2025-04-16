@@ -50,6 +50,12 @@ export const authAPI = {
     return response.data.data;
   },
 
+   // 카카오 챗봇 계정 연동
+   linkKakaoChannel: async (linkCode) => {
+    const response = await apiClient.post('/auth/link-kakao-channel', { linkCode });
+    return response.data;
+  },
+
 
 kakaoLogin: async (code) => {
   console.log('카카오 API 호출:', code);
@@ -126,6 +132,8 @@ export const usersAPI = {
     return response.data.data;
   },
 };
+
+
 
 // 기부 관련 API
 export const donationsAPI = {

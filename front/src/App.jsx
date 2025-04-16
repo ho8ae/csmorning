@@ -42,6 +42,7 @@ function App() {
         
         <Route path="/terms" element={<TermsPage/>} />
 
+        <Route path="/kakao-link" element={<KakaoLinkPage />} />
 
         {/* 사용자 인증 라우트 */}
         <Route path="/dashboard" element={<DashboardPage />} />
