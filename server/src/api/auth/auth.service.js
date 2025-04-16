@@ -62,6 +62,8 @@ const processKakaoLogin = async (code) => {
     }
   );
 
+  console.log('카카오 토큰 정보:', tokenResponse.data);
+
   
   const { access_token } = tokenResponse.data;
   
