@@ -20,4 +20,20 @@ router.post('/cron',
   testController.runScheduler
 );
 
+
+router.post('/chatbot', 
+  isAuthenticated, 
+  isAdmin,
+  validateRequest(testValidation.sendMessage), 
+  testController.sendChatbotMessage
+);
+
+
+router.post('/broadcast', 
+  isAuthenticated, 
+  isAdmin,
+  validateRequest(testValidation.broadcastMessage), 
+  testController.sendMessageToAllSubscribers
+);
+
 module.exports = router;

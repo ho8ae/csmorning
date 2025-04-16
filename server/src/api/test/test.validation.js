@@ -12,7 +12,13 @@ const runCron = Joi.object({
   action: Joi.string().valid('sendDailyContent', 'createDailyQuestion').required()
 });
 
+// 전체 메시지 전송 유효성 검사
+const broadcastMessage = Joi.object({
+  message: Joi.string().required()
+});
+
 module.exports = {
   sendMessage,
-  runCron
+  runCron,
+  broadcastMessage
 };
