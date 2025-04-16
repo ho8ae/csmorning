@@ -11,7 +11,7 @@ function scheduleDailyQuestion() {
   console.log('스케줄러 초기화 중...');
   
   // 매일 아침 8시에 CS 내용 전송 (한국 시간)
-  cron.schedule('46 20 * * *', sendDailyContent, {
+  cron.schedule('15 21 * * *', sendDailyContent, {
     timezone: 'Asia/Seoul'
   });
   

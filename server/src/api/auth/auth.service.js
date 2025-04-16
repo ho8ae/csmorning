@@ -62,10 +62,15 @@ const processKakaoLogin = async (code) => {
     }
   );
 
-  console.log('카카오 토큰 정보:', tokenResponse.data);
 
-  
-  const { access_token } = tokenResponse.data;
+  const { access_token, refresh_token, expires_in, refresh_token_expires_in  } = tokenResponse.data;
+
+  console.log('카카오 토큰 정보:', {
+    access_token,
+    refresh_token,
+    expires_in,
+    refresh_token_expires_in
+  });
   
   // 카카오 사용자 정보 가져오기
   const userResponse = await axios.get('https://kapi.kakao.com/v2/user/me', {
@@ -101,7 +106,9 @@ const processKakaoLogin = async (code) => {
   
   return {
     token,
-    user
+    user,
+    access_token, // 카카오 access_token
+    refresh_token, // 카카오 refresh_token
   };
 };
 
