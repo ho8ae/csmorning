@@ -160,6 +160,8 @@ const handleKakaoMessage = async (req, res, next) => {
       }
     };
     
+    // 카카오 챗봇이 응답을 처리할 때 필요한 헤더
+    res.setHeader('Content-Type', 'application/json; charset=utf-8'); 
     return res.status(200).json(responseBody);
   } catch (error) {
     console.error('웹훅 처리 중 오류 발생:', error);
@@ -196,7 +198,7 @@ const testEndpoint = (req, res) => {
       ]
     }
   };
-  
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
   return res.status(200).json(responseBody);
 };
 
