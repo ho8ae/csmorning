@@ -20,6 +20,7 @@ import NewQuestionPage from './pages/admin/NewQuestionPage';
 import EditQuestionPage from './pages/admin/EditQuestionPage';
 import UsersListPage from './pages/admin/UsersListPage';
 import TermsPage from './pages/TermsPage';
+import KakaoLinkPage from './pages/KakaoLinkPage';
 
 
 function App() {
