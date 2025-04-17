@@ -1,7 +1,6 @@
 import axios from 'axios';
 
 // API 기본 URL 설정
-
 const isProd = import.meta.env.VITE_MODE === 'production';
 const API_URL = isProd ? 'https://csmorning.co.kr/api' : 'http://localhost:3000/api';
 
@@ -44,31 +43,37 @@ apiClient.interceptors.response.use(
 
 // 인증 관련 API
 export const authAPI = {
-  // 일반 관리자 로그인
+  // 회원가입
+  register: async (userData) => {
+    const response = await apiClient.post('/auth/register', userData);
+    return response.data.data;
+  },
+
+  // 일반 로그인 (관리자 및 일반 회원)
   login: async (credentials) => {
     const response = await apiClient.post('/auth/login', credentials);
     return response.data.data;
   },
 
-   // 카카오 챗봇 계정 연동
-   linkKakaoChannel: async (linkCode) => {
+  // 카카오 챗봇 계정 연동
+  linkKakaoChannel: async (linkCode) => {
     const response = await apiClient.post('/auth/link-kakao-channel', { linkCode });
     return response.data;
   },
 
-
-kakaoLogin: async (code) => {
-  console.log('카카오 API 호출:', code);
-  try {
-    // GET 방식으로 변경
-    const response = await apiClient.get('/auth/kakao', { params: { code } });
-    console.log('카카오 로그인 응답:', response.data);
-    return response.data.data;
-  } catch (error) {
-    console.error('카카오 API 에러:', error.response?.data || error.message);
-    throw error;
-  }
-},
+  // 카카오 로그인
+  kakaoLogin: async (code) => {
+    console.log('카카오 API 호출:', code);
+    try {
+      // GET 방식으로 변경
+      const response = await apiClient.get('/auth/kakao', { params: { code } });
+      console.log('카카오 로그인 응답:', response.data);
+      return response.data.data;
+    } catch (error) {
+      console.error('카카오 API 에러:', error.response?.data || error.message);
+      throw error;
+    }
+  },
 
   // 로그아웃
   logout: () => {
@@ -132,8 +137,6 @@ export const usersAPI = {
     return response.data.data;
   },
 };
-
-
 
 // 기부 관련 API
 export const donationsAPI = {

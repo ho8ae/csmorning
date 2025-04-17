@@ -11,13 +11,37 @@ const useAuthStore = create(
       isLoading: false,
       error: null,
       
+      // 회원가입
+      register: async (userData) => {
+        set({ isLoading: true, error: null });
+        try {
+          // authAPI에 register 함수 추가 필요
+          const { token, user } = await authAPI.register(userData);
+          
+          localStorage.setItem('auth_token', token);
+          
+          set({ 
+            token,
+            user, 
+            isAuthenticated: true, 
+            isLoading: false 
+          });
+          
+          return { token, user };
+        } catch (error) {
+          const errorMessage = error.response?.data?.message || '회원가입에 실패했습니다.';
+          set({ error: errorMessage, isLoading: false });
+          throw error;
+        }
+      },
+      
       // 일반 로그인 (관리자용)
       login: async (credentials) => {
         set({ isLoading: true, error: null });
         try {
           const { token, user } = await authAPI.login(credentials);
 
-          console.log('카카오 로그인 성공:', { token, user });
+          console.log('로그인 성공:', { token, user });
           
           localStorage.setItem('auth_token', token);
           
