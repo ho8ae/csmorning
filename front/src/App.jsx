@@ -12,6 +12,7 @@ import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
 import KakaoCallbackPage from './pages/KakaoCallbackPage';
 import DashboardPage from './pages/DashboardPage';
+import RegisterPage from './pages/RegisterPage';
 
 // 관리자 페이지
 import AdminDashboardPage from './pages/AdminDashboardPage';
@@ -25,7 +26,7 @@ import PrivacyContentPage from './pages/PrivacyContentPage';
 
 
 function App() {
-  const { checkAuth, isAuthenticated } = useAuthStore();
+  const { checkAuth, isAuthenticated } = useAuthStore(); 
 
   // 초기 인증 상태 확인
   useEffect(() => {
@@ -38,6 +39,7 @@ function App() {
         {/* 공용 라우트 */}
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} /> 
         <Route path="/auth/kakao/callback" element={<KakaoCallbackPage />} />
 
         <Route path="/kakao-callback" element={<KakaoCallbackPage />} />
