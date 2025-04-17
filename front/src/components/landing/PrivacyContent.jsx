@@ -29,8 +29,7 @@ const PrivacyContent = () => {
         <div className="mb-4">
           <h4 className="font-medium mb-1">선택항목</h4>
           <ul className="list-disc ml-6">
-            <li>이메일 주소</li>
-            <li>직업 및 관심 분야</li>
+            <li>카카오 메시지 전송</li>
           </ul>
         </div>
         <div>

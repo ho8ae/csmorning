@@ -21,6 +21,7 @@ import EditQuestionPage from './pages/admin/EditQuestionPage';
 import UsersListPage from './pages/admin/UsersListPage';
 import TermsPage from './pages/TermsPage';
 import KakaoLinkPage from './pages/KakaoLinkPage';
+import PrivacyContentPage from './pages/PrivacyContentPage';
 
 
 function App() {
@@ -42,7 +43,7 @@ function App() {
         <Route path="/kakao-callback" element={<KakaoCallbackPage />} />
         
         <Route path="/terms" element={<TermsPage/>} />
-
+        <Route path="/privacy" element={<PrivacyContentPage />} />
         <Route path="/kakao-link" element={<KakaoLinkPage />} />
 
         {/* 사용자 인증 라우트 */}
