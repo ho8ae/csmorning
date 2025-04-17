@@ -31,7 +31,31 @@ const TermsContent = () => {
       </section>
 
       <section>
-        <h3 className="text-lg font-semibold mb-3">제4조 (서비스 이용 계약의 성립)</h3>
+        <h3 className="text-lg font-semibold mb-3">제4조 (개인정보 수집 및 이용)</h3>
+        <ol className="list-decimal ml-6 mt-2 space-y-2">
+          <li>회사는 서비스 제공을 위해 다음과 같은 개인정보를 수집합니다:
+            <ul className="list-disc ml-6 mt-1">
+              <li>필수항목: 이름, 성별, 연령대, 생일(출생연도), 카카오계정(전화번호), 닉네임, 프로필 이미지, 카카오 계정 ID,이메일 주소</li>
+              <li>선택항목: 카카오톡 메시지 전송	</li>
+            </ul>
+          </li>
+          <li>개인정보의 수집 및 이용목적은 다음과 같습니다:
+            <ul className="list-disc ml-6 mt-1">
+              <li>회원 식별 및 관리</li>
+              <li>서비스 제공 및 운영</li>
+              <li>맞춤형 콘텐츠 제공</li>
+              <li>학습 통계 관리</li>
+              <li>서비스 개선 및 신규 서비스 개발</li>
+              <li>마케팅 및 광고에의 활용(선택 동의 시)</li>
+            </ul>
+          </li>
+          <li>회사는 수집한 개인정보를 회원 탈퇴 시까지 보관하며, 미사용 계정의 경우 최종 접속일로부터 1년 후 자동 삭제합니다.</li>
+          <li>회원은 개인정보 수집 및 이용 동의를 거부할 권리가 있으나, 필수항목에 대한 동의를 거부할 경우 서비스 이용이 제한될 수 있습니다.</li>
+        </ol>
+      </section>
+
+      <section>
+        <h3 className="text-lg font-semibold mb-3">제5조 (서비스 이용 계약의 성립)</h3>
         <ol className="list-decimal ml-6 mt-2 space-y-2">
           <li>서비스 이용 계약은 회원이 되고자 하는 자(이하 "가입신청자")가 약관의 내용에 대하여 동의를 한 다음 회원가입 신청을 하고 회사가 이러한 신청에 대하여 승낙함으로써 체결됩니다.</li>
           <li>회사는 가입신청자의 신청에 대하여 서비스 이용 승낙을 원칙으로 합니다. 다만, 회사는 다음 각 호에 해당하는 신청에 대하여는 승낙을 하지 않거나 사후에 이용계약을 해지할 수 있습니다:
@@ -47,7 +71,7 @@ const TermsContent = () => {
       </section>
 
       <section>
-        <h3 className="text-lg font-semibold mb-3">제5조 (회원의 의무)</h3>
+        <h3 className="text-lg font-semibold mb-3">제6조 (회원의 의무)</h3>
         <ol className="list-decimal ml-6 mt-2 space-y-2">
           <li>회원은 서비스 이용 시 다음 행위를 하지 않아야 합니다:
             <ul className="list-disc ml-6 mt-1">
@@ -65,11 +89,14 @@ const TermsContent = () => {
       </section>
 
       <section>
-        <h3 className="text-lg font-semibold mb-3">제6조 (서비스의 제공 및 변경)</h3>
+        <h3 className="text-lg font-semibold mb-3">제7조 (서비스의 제공 및 변경)</h3>
         <ol className="list-decimal ml-6 mt-2 space-y-2">
           <li>회사는 회원에게 아래와 같은 서비스를 제공합니다:
             <ul className="list-disc ml-6 mt-1">
               <li>CS 관련 정보 제공 서비스</li>
+              <li>CS 학습 콘텐츠 및 문제 제공</li>
+              <li>카카오톡 챗봇을 통한 CS 문제 제공 및 피드백</li>
+              <li>학습 통계 및 진도 관리</li>
               <li>기타 회사가 추가 개발하거나 다른 회사와의 제휴계약 등을 통해 회원에게 제공하는 일체의 서비스</li>
             </ul>
           </li>
@@ -78,7 +105,7 @@ const TermsContent = () => {
       </section>
 
       <section>
-        <h3 className="text-lg font-semibold mb-3">제7조 (서비스 이용 시간)</h3>
+        <h3 className="text-lg font-semibold mb-3">제8조 (서비스 이용 시간)</h3>
         <ol className="list-decimal ml-6 mt-2 space-y-2">
           <li>서비스 이용은 회사의 업무상 또는 기술상 특별한 지장이 없는 한 연중무휴, 1일 24시간 운영을 원칙으로 합니다.</li>
           <li>회사는 서비스를 일정범위로 분할하여 각 범위별로 이용가능 시간을 별도로 정할 수 있습니다. 이 경우 그 내용을 사전에 공지합니다.</li>
@@ -86,7 +113,16 @@ const TermsContent = () => {
       </section>
 
       <section>
-        <h3 className="text-lg font-semibold mb-3">제8조 (책임제한)</h3>
+        <h3 className="text-lg font-semibold mb-3">제9조 (개인정보의 보호 및 관리)</h3>
+        <ol className="list-decimal ml-6 mt-2 space-y-2">
+          <li>회사는 관련 법령이 정하는 바에 따라 회원의 개인정보를 보호하기 위해 노력합니다.</li>
+          <li>개인정보의 보호 및 사용에 대해서는 관련 법령 및 회사의 개인정보처리방침이 적용됩니다.</li>
+          <li>회사는 서비스를 중단하거나 회원이 개인정보 제공 동의를 철회한 경우에는 신속하게 회원의 개인정보를 파기합니다. 단, 관련 법령에 따라 보존해야 하는 정보는 예외로 합니다.</li>
+        </ol>
+      </section>
+
+      <section>
+        <h3 className="text-lg font-semibold mb-3">제10조 (책임제한)</h3>
         <ol className="list-decimal ml-6 mt-2 space-y-2">
           <li>회사는 천재지변 또는 이에 준하는 불가항력으로 인하여 서비스를 제공할 수 없는 경우에는 서비스 제공에 관한 책임이 면제됩니다.</li>
           <li>회사는 회원의 귀책사유로 인한 서비스 이용의 장애에 대하여 책임을 지지 않습니다.</li>
@@ -95,7 +131,7 @@ const TermsContent = () => {
       </section>
 
       <section>
-        <h3 className="text-lg font-semibold mb-3">제9조 (준거법 및 재판관할)</h3>
+        <h3 className="text-lg font-semibold mb-3">제11조 (준거법 및 재판관할)</h3>
         <p>
           이 약관의 해석 및 회사와 회원 간의 분쟁에 대하여는 대한민국의 법을 적용하며, 이로 인한 분쟁이 발생할 경우 민사소송법상의 관할법원에 제소합니다.
         </p>

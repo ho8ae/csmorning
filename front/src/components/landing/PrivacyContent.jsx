@@ -10,7 +10,8 @@ const PrivacyContent = () => {
         </p>
         <ol className="list-decimal ml-6 mt-2 space-y-2">
           <li>회원 가입 및 관리: 회원 가입의사 확인, 회원제 서비스 제공에 따른 본인 식별·인증, 회원자격 유지·관리, 서비스 부정이용 방지, 각종 고지·통지 등을 목적으로 개인정보를 처리합니다.</li>
-          <li>서비스 제공: 콘텐츠 제공, 맞춤서비스 제공, 서비스 이용 통계 등을 목적으로 개인정보를 처리합니다.</li>
+          <li>서비스 제공: CS 문제 및 콘텐츠 제공, 맞춤형 학습 서비스 제공, 학습 통계 및 진도 관리, 서비스 이용 통계 등을 목적으로 개인정보를 처리합니다.</li>
+          <li>웹사이트와 카카오톡 채널 연동: 회원의 학습 데이터 통합 관리, 서비스 연속성 유지, 개인화된 서비스 제공 등을 목적으로 개인정보를 처리합니다.</li>
           <li>마케팅 및 광고에의 활용: 신규 서비스 개발 및 맞춤 서비스 제공, 이벤트 및 광고성 정보 제공 및 참여기회 제공, 서비스의 유효성 확인, 접속빈도 파악 또는 회원의 서비스 이용에 대한 통계 등을 목적으로 개인정보를 처리합니다.</li>
         </ol>
       </section>
@@ -21,17 +22,15 @@ const PrivacyContent = () => {
         <div className="mb-4">
           <h4 className="font-medium mb-1">필수항목</h4>
           <ul className="list-disc ml-6">
-            <li>이메일 주소</li>
-            <li>비밀번호</li>
-            <li>이름 또는 닉네임</li>
+            <li>카카오 계정 연동 시: 이름, 성별, 연령대, 생일(출생연도), 카카오계정(전화번호), 카카오 계정 ID, 닉네임, 프로필 이미지</li>
+            <li>카카오 채널 이용 시: 카카오톡 채널 사용자 ID(해시 형태)</li>
           </ul>
         </div>
         <div className="mb-4">
           <h4 className="font-medium mb-1">선택항목</h4>
           <ul className="list-disc ml-6">
-            <li>프로필 이미지</li>
+            <li>이메일 주소</li>
             <li>직업 및 관심 분야</li>
-            <li>휴대폰 번호</li>
           </ul>
         </div>
         <div>
@@ -39,18 +38,31 @@ const PrivacyContent = () => {
           <ul className="list-disc ml-6">
             <li>IP 주소, 쿠키, 방문 일시, 서비스 이용 기록, 불량 이용 기록</li>
             <li>모바일 서비스 이용 시 단말기 정보(모델명, OS 버전)</li>
+            <li>학습 통계 정보: 문제 응답 결과, 정답률, 학습 진도</li>
           </ul>
         </div>
       </section>
 
       <section>
-        <h3 className="text-lg font-semibold mb-3">3. 개인정보의 보유 및 이용기간</h3>
+        <h3 className="text-lg font-semibold mb-3">3. 개인정보의 수집 방법</h3>
+        <p>회사는 다음과 같은 방법으로 개인정보를 수집합니다:</p>
+        <ul className="list-disc ml-6 mt-2 space-y-1">
+          <li>카카오 로그인 API를 통한 정보 수집</li>
+          <li>카카오톡 채널 연동 시 정보 수집</li>
+          <li>서비스 이용 과정에서 자동으로 생성되는 정보 수집</li>
+          <li>회원이 직접 입력하는 정보 수집</li>
+        </ul>
+      </section>
+
+      <section>
+        <h3 className="text-lg font-semibold mb-3">4. 개인정보의 보유 및 이용기간</h3>
         <p className="mb-2">
           회사는 법령에 따른 개인정보 보유·이용기간 또는 정보주체로부터 개인정보를 수집 시에 동의 받은 개인정보 보유·이용기간 내에서 개인정보를 처리·보유합니다.
         </p>
         <p>각각의 개인정보 처리 및 보유 기간은 다음과 같습니다:</p>
         <ul className="list-disc ml-6 mt-2 space-y-1">
           <li>회원 가입 및 관리: 회원 탈퇴 시까지</li>
+          <li>미사용 계정: 최종 접속일로부터 1년 후 자동 삭제</li>
           <li>다만, 다음의 사유에 해당하는 경우에는 해당 사유 종료 시까지
             <ul className="list-disc ml-6 mt-1">
               <li>관계 법령 위반에 따른 수사·조사 등이 진행 중인 경우에는 해당 수사·조사 종료 시까지</li>
@@ -62,7 +74,7 @@ const PrivacyContent = () => {
       </section>
 
       <section>
-        <h3 className="text-lg font-semibold mb-3">4. 개인정보의 파기절차 및 방법</h3>
+        <h3 className="text-lg font-semibold mb-3">5. 개인정보의 파기절차 및 방법</h3>
         <p className="mb-2">
           회사는 개인정보 보유기간의 경과, 처리목적 달성 등 개인정보가 불필요하게 되었을 때에는 지체없이 해당 개인정보를 파기합니다.
         </p>
@@ -82,7 +94,7 @@ const PrivacyContent = () => {
       </section>
 
       <section>
-        <h3 className="text-lg font-semibold mb-3">5. 개인정보의 안전성 확보 조치</h3>
+        <h3 className="text-lg font-semibold mb-3">6. 개인정보의 안전성 확보 조치</h3>
         <p className="mb-2">회사는 개인정보보호법 제29조에 따라 다음과 같이 안전성 확보에 필요한 기술적/관리적 및 물리적 조치를 하고 있습니다:</p>
         <ol className="list-decimal ml-6 mt-2 space-y-2">
           <li>개인정보 취급 직원의 최소화 및 교육: 개인정보를 취급하는 직원을 지정하고 담당자에 한정시켜 최소화하여 개인정보를 관리하는 대책을 시행하고 있습니다.</li>
@@ -94,7 +106,31 @@ const PrivacyContent = () => {
       </section>
 
       <section>
-        <h3 className="text-lg font-semibold mb-3">6. 개인정보 관련 민원서비스</h3>
+        <h3 className="text-lg font-semibold mb-3">7. 개인정보 처리 위탁</h3>
+        <p className="mb-2">
+          회사는 서비스 제공을 위해 필요한 업무 중 일부를 외부 업체에 위탁하고 있으며, 위탁받은 업체가 개인정보 보호법에 따라 개인정보를 안전하게 처리하도록 필요한 사항을 규정하고 있습니다.
+        </p>
+        <div className="mb-3">
+          <h4 className="font-medium mb-1">개인정보 처리 위탁 현황</h4>
+          <table className="w-full border-collapse border border-gray-300 mt-2">
+            <thead>
+              <tr className="bg-gray-100">
+                <th className="border border-gray-300 px-4 py-2 text-left">위탁받는 자(수탁자)</th>
+                <th className="border border-gray-300 px-4 py-2 text-left">위탁업무 내용</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td className="border border-gray-300 px-4 py-2">카카오</td>
+                <td className="border border-gray-300 px-4 py-2">카카오 로그인, 카카오톡 채널을 통한 메시지 발송</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section>
+        <h3 className="text-lg font-semibold mb-3">8. 개인정보 관련 민원서비스</h3>
         <p className="mb-2">
           회사는 개인정보 처리에 관한 업무를 총괄해서 책임지고, 개인정보 처리와 관련한 정보주체의 불만처리 및 피해구제 등을 위하여 아래와 같이 개인정보 보호책임자를 지정하고 있습니다.
         </p>
@@ -112,7 +148,7 @@ const PrivacyContent = () => {
       </section>
 
       <section>
-        <h3 className="text-lg font-semibold mb-3">7. 개인정보 처리방침 변경</h3>
+        <h3 className="text-lg font-semibold mb-3">9. 개인정보 처리방침 변경</h3>
         <p>
           이 개인정보처리방침은 시행일로부터 적용되며, 법령 및 방침에 따른 변경내용의 추가, 삭제 및 정정이 있는 경우에는 변경사항의 시행 7일 전부터 공지사항을 통하여 고지할 것입니다.
         </p>
