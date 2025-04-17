@@ -20,6 +20,15 @@ model User {
   password      String?   // 관리자용 비밀번호 (해시됨)
   nickname      String?
   profileImage  String?
+  
+  // 카카오 로그인으로 수집하는 필수 항목들
+  name          String?   // 이름
+  gender        String?   // 성별 (male/female)
+  ageGroup      String?   // 연령대 (10~19, 20~29, 30~39 등)
+  birthDate     DateTime? // 생일
+  birthYear     Int?      // 출생연도
+  phoneNumber   String?   // 카카오계정(전화번호)
+  
   isSubscribed  Boolean   @default(true)
   isTemporary   Boolean   @default(false)
   totalAnswered Int       @default(0)

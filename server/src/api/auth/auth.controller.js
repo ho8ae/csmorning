@@ -19,6 +19,45 @@ const login = async (req, res, next) => {
 };
 
 /**
+ * 일반 회원가입 처리
+ */
+const register = async (req, res, next) => {
+  try {
+    const { 
+      email, 
+      password, 
+      nickname, 
+      name, 
+      gender, 
+      ageGroup, 
+      birthDate, 
+      birthYear, 
+      phoneNumber 
+    } = req.body;
+    
+    const result = await authService.register(
+      email, 
+      password, 
+      nickname, 
+      name, 
+      gender, 
+      ageGroup, 
+      birthDate, 
+      birthYear, 
+      phoneNumber
+    );
+    
+    return res.status(201).json({
+      success: true,
+      data: result,
+      message: '회원가입이 완료되었습니다.'
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
  * 카카오 로그인 처리
  */
 const kakaoLogin = async (req, res, next) => {
@@ -124,5 +163,6 @@ module.exports = {
   getMe,
   logout,
   redirectToFrontendCallback,
-  linkKakaoChannel
+  linkKakaoChannel,
+  register
 };

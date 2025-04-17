@@ -7,7 +7,7 @@ const { generateToken } = require('../../middleware/auth.middleware');
 const createError = require('http-errors');
 
 /**
- * 관리자 로그인 처리
+ * 로그인 처리 (관리자 및 일반 사용자)
  * @param {string} username - 이메일 주소
  * @param {string} password - 비밀번호
  * @returns {Promise<Object>} 토큰과 사용자 정보
@@ -23,10 +23,79 @@ const login = async (username, password) => {
     throw createError(401, '아이디 또는 비밀번호가 올바르지 않습니다.');
   }
   
-  // 관리자가 아닌 경우
-  if (user.role !== 'admin') {
-    throw createError(403, '관리자 권한이 없습니다.');
+  // JWT 토큰 생성
+  const token = generateToken({ userId: user.id });
+  
+  // 비밀번호 필드 제외하고 응답
+  const { password: _, ...userWithoutPassword } = user;
+  
+  return {
+    token,
+    user: userWithoutPassword
+  };
+};
+
+/**
+ * 일반 회원가입 처리
+ * @param {string} email - 이메일 주소
+ * @param {string} password - 비밀번호
+ * @param {string} nickname - 닉네임
+ * @param {string} name - 이름
+ * @param {string} gender - 성별 (male/female)
+ * @param {string} ageGroup - 연령대 (10~19, 20~29 등)
+ * @param {Date} birthDate - 생일
+ * @param {number} birthYear - 출생연도
+ * @param {string} phoneNumber - 전화번호
+ * @returns {Promise<Object>} 토큰과 사용자 정보
+ */
+const register = async (
+  email, 
+  password, 
+  nickname,
+  name,
+  gender,
+  ageGroup,
+  birthDate,
+  birthYear,
+  phoneNumber
+) => {
+  // 이메일 중복 확인
+  const existingUser = await prisma.user.findUnique({
+    where: { email }
+  });
+  
+  if (existingUser) {
+    throw createError(409, '이미 사용 중인 이메일입니다.');
   }
+  
+  // 전화번호 중복 확인
+  const existingPhoneUser = await prisma.user.findFirst({
+    where: { phoneNumber }
+  });
+  
+  if (existingPhoneUser) {
+    throw createError(409, '이미 사용 중인 전화번호입니다.');
+  }
+  
+  // 비밀번호 해싱
+  const hashedPassword = await bcrypt.hash(password, 10);
+  
+  // 회원 생성
+  const user = await prisma.user.create({
+    data: {
+      email,
+      password: hashedPassword,
+      nickname,
+      name,
+      gender,
+      ageGroup,
+      birthDate: new Date(birthDate),
+      birthYear,
+      phoneNumber,
+      isSubscribed: true,
+      role: 'user'
+    }
+  });
   
   // JWT 토큰 생성
   const token = generateToken({ userId: user.id });
@@ -114,5 +183,6 @@ const processKakaoLogin = async (code) => {
 
 module.exports = {
   login,
-  processKakaoLogin
+  processKakaoLogin,
+  register
 };

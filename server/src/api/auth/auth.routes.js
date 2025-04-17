@@ -1,12 +1,14 @@
 const express = require('express');
 const router = express.Router();
 const authController = require('./auth.controller');
-const { isAuthenticated } = require('../../middleware/auth.middleware');
+const { isAuthenticated, isAdmin, authAdmin } = require('../../middleware/auth.middleware');
 const validate = require('../../middleware/validation.middleware');
 const authValidation = require('./auth.validation');
 
+// 일반 회원가입
+router.post('/register', validate(authValidation.registerSchema), authController.register);
 
-// 관리자 로그인
+// 이메일 로그인 (관리자 및 일반 사용자)
 router.post('/login', validate(authValidation.loginSchema), authController.login);
 
 // 카카오 로그인 처리
@@ -21,7 +23,7 @@ router.post('/logout', authController.logout);
 // 카카오 로그인 리다이렉트 처리
 router.get('/kakao/callback', authController.redirectToFrontendCallback);
 
-router.post('/link-kakao-channel', isAuthenticated , authController.linkKakaoChannel); //auth.required
-
+// 카카오 채널 연동
+router.post('/link-kakao-channel', isAuthenticated, authController.linkKakaoChannel);
 
 module.exports = router;
