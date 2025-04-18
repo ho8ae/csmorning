@@ -23,6 +23,11 @@ import UsersListPage from './pages/admin/UsersListPage';
 import TermsPage from './pages/TermsPage';
 import KakaoLinkPage from './pages/KakaoLinkPage';
 import PrivacyContentPage from './pages/PrivacyContentPage';
+import PremiumFeaturesPage from './pages/PremiumFeaturesPage';
+import PaymentSuccessPage from './pages/PaymentSuccessPage';
+import CheckoutPage from './pages/CheckoutPage';
+import SubscriptionTermsPage from './pages/SubscriptionTermsPage';
+import RefundPolicyPage from './pages/RefundPolicyPage';
 
 
 function App() {
@@ -47,6 +52,12 @@ function App() {
         <Route path="/terms" element={<TermsPage/>} />
         <Route path="/privacy" element={<PrivacyContentPage />} />
         <Route path="/kakao-link" element={<KakaoLinkPage />} />
+
+        <Route path="/premium-features" element={<PremiumFeaturesPage />} />
+        <Route path="/checkout" element={<CheckoutPage />} />
+        <Route path="/payment-success" element={<PaymentSuccessPage />} />
+        <Route path="/subscription-terms" element={<SubscriptionTermsPage />} />
+        <Route path="/refund-policy" element={<RefundPolicyPage />} />
 
         {/* 사용자 인증 라우트 */}
         <Route path="/dashboard" element={<DashboardPage />} />
