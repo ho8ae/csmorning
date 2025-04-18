@@ -60,9 +60,21 @@ const handleKakaoMessage = async (req, res, next) => {
         const question = todayQuestion.question;
         let options = '';
 
-        question.options.forEach((option, index) => {
-          options += `${index + 1}. ${option}\n`;
-        });
+        // options가 문자열인 경우 JSON 파싱
+        const optionsArray =
+          typeof question.options === 'string'
+            ? JSON.parse(question.options)
+            : question.options;
+
+        // 이제 배열로 처리
+        if (Array.isArray(optionsArray)) {
+          optionsArray.forEach((option, index) => {
+            options += `${index + 1}. ${option}\n`;
+          });
+        } else {
+          console.log('Parsed question options is not an array:', optionsArray);
+          options = '선택지 형식이 올바르지 않습니다.';
+        }
 
         responseText = `[오늘의 CS 질문]\n\n${question.content}\n\n${options}\n\n답변은 번호로 입력해주세요 (예: 1)`;
       }
