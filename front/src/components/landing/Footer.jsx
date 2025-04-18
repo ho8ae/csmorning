@@ -24,8 +24,10 @@ const Footer = () => {
             <div className="mb-6 md:mb-0">
               <h3 className="text-xl font-bold text-white mb-3">CS Morning</h3>
               {/* 사업자 정보 */}
-                <p className="text-sm md:text-left">사업자 등록번호: 846-05-03131</p>
+                <p className="text-sm md:text-left">상호명: 후이즈왓</p> 
                 <p className="text-sm md:text-left">대표자: 김태호</p>
+                <p className="text-sm md:text-left">사업자 등록번호: 846-05-03131</p>
+                <p className="text-sm md:text-left">전화번호: 0507-2097-2373</p>
                 <p className="text-sm md:text-left">주소: 경기도 다산동 4025-33 A-202 </p>
                 <p className="text-sm md:text-left">이메일: xogh2242@gmail.com</p>
             </div>
