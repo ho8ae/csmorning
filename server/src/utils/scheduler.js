@@ -2,7 +2,7 @@
 const cron = require('node-cron');
 const { prisma } = require('../config/db');
 const { generateCsContent } = require('../services/content.service');
-const kakaoService = require('../services/kakao.service');
+const bizgoService = require('../api/bizgo/bizgo.service');
 const axios = require('axios');
 
 /**
@@ -33,7 +33,10 @@ async function sendDailyContent() {
     
     // 구독 중인 사용자 찾기
     const subscribers = await prisma.user.findMany({
-      where: { isSubscribed: true }
+      where: { 
+        isSubscribed: true,
+        phoneNumber: { not: null } // 전화번호가 있는 사용자만
+      }
     });
     
     if (subscribers.length === 0) {
@@ -44,100 +47,96 @@ async function sendDailyContent() {
     // CS 컨텐츠 생성
     const content = await generateCsContent();
     
-    // 1. 카카오톡 친구에게 메시지 전송 (기존 방식)
-    // await sendToKakaoFriends(subscribers, content);
-    
-    // 2. 챗봇을 통해 메시지 전송 (새로운 방식)
-    await sendToChatbot(subscribers, content);
-    
-    console.log(`${subscribers.length}명의 사용자에게 메시지 전송 완료`);
-  } catch (error) {
-    console.error('일일 컨텐츠 전송 중 오류 발생:', error);
-  }
-}
-
-/**
- * 카카오톡 친구에게 메시지 전송 (기존 방식)
- */
-async function sendToKakaoFriends(subscribers, content) {
-  try {
-    // 메시지 템플릿 생성
-    const template = {
-      object_type: 'text',
-      text: `[오늘의 CS 지식]\n\n${content}\n\n좋은 하루 되세요!`,
-      link: {
-        web_url: process.env.SERVICE_URL || 'https://csmorning.co.kr',
-        mobile_web_url: process.env.SERVICE_URL || 'https://csmorning.co.kr'
-      },
-      button_title: '웹사이트 방문하기'
-    };
-    
-    // 각 구독자에게 메시지 전송
-    for (const user of subscribers) {
-      try {
-        if (user.kakaoId) {
-          await kakaoService.sendMessage(user.kakaoId, template);
-          console.log(`사용자 ${user.kakaoId}에게 친구 메시지 전송 성공`);
-        }
-        
-        // 너무 많은 요청을 한 번에 보내지 않도록 잠시 대기
-        await new Promise(resolve => setTimeout(resolve, 500));
-      } catch (error) {
-        console.error(`사용자 ${user.kakaoId}에게 친구 메시지 전송 실패:`, error.message);
-      }
-    }
-  } catch (error) {
-    console.error('카카오톡 친구 메시지 전송 중 오류 발생:', error);
-  }
-}
-
-/**
- * 챗봇을 통해 메시지 전송 (새로운 방식)
- */
-async function sendToChatbot(subscribers, content) {
-  try {
-    // 챗봇 응답 포맷
-    const responseTemplate = kakaoService.formatSkillResponse(`[오늘의 CS 지식]\n\n${content}\n\n좋은 하루 되세요!`);
-    
     // 오늘의 질문 가져오기
     const todayQuestion = await prisma.dailyQuestion.findFirst({
       orderBy: { sentDate: 'desc' },
       include: { question: true }
     });
     
-    // 메시지에 오늘의 질문 추가
-    if (todayQuestion) {
-      responseTemplate.template.outputs.push({
-        simpleText: {
-          text: `[오늘의 질문]\n\n${todayQuestion.question.content}\n\n챗봇에서 '오늘의 질문'을 입력하시면 답변할 수 있습니다.`
-        }
-      });
+    // 알림톡 본문 내용 생성
+    let messageContent = `[오늘의 CS 지식]\n\n${content}\n\n좋은 하루 되세요!`;
+    
+    // 오늘의 질문이 있으면 추가
+    if (todayQuestion && todayQuestion.question) {
+      messageContent += `\n\n[오늘의 질문]\n\n${todayQuestion.question.text}`;
     }
     
-    // 웹훅 URL (실제 배포 환경에 맞게 수정 필요)
-    const webhookUrl = `${process.env.SERVICE_URL || 'https://csmorning.co.kr'}/api/webhook/message`;
+    // 버튼 추가
+    const buttons = [
+      {
+        name: "웹사이트 방문하기",
+        type: "WL",
+        urlMobile: process.env.SERVICE_URL || 'https://csmorning.co.kr'
+      }
+    ];
     
-    // 각 구독자에게 메시지 전송
+    // Bizgo API를 통해 알림톡 전송
+    const result = await sendToBizgoAlimTalk(subscribers, messageContent, buttons);
+    
+    console.log(`${result.sentCount}명의 사용자에게 알림톡 전송 완료`);
+    return result;
+  } catch (error) {
+    console.error('일일 컨텐츠 전송 중 오류 발생:', error);
+  }
+}
+
+/**
+ * Bizgo API를 통해 알림톡 전송
+ * @param {Array} subscribers - 구독자 목록
+ * @param {string} content - 알림톡 내용
+ * @param {Array} buttons - 버튼 정보
+ * @returns {Object} 전송 결과
+ */
+async function sendToBizgoAlimTalk(subscribers, content, buttons = []) {
+  try {
+    let sentCount = 0;
+    let failedCount = 0;
+    const resultDetails = [];
+    
+    // 각 구독자에게 알림톡 전송
     for (const user of subscribers) {
       try {
-        if (user.kakaoId) {
-          // 여기서는 예시일 뿐, 실제로 챗봇에 직접 메시지를 보내는 API는 카카오에서 제공하지 않을 수 있음
-          // 이 경우 카카오 i 오픈빌더 서비스 웹훅 기능을 활용해야 함
-          console.log(`사용자 ${user.kakaoId}에게 챗봇 메시지를 전송할 예정입니다 (개발 중)`);
+        if (user.phoneNumber) {
+          // 전화번호 형식 정리 (하이픈 제거)
+          const phoneNumber = user.phoneNumber.replace(/-/g, '');
           
-          // 실제 구현에서는 이 부분이 카카오에서 제공하는 API로 대체되어야 함
+          // 알림톡 전송
+          const result = await bizgoService.sendAlimTalk(phoneNumber, content, buttons);
+          sentCount++;
+          resultDetails.push({
+            userId: user.id,
+            phoneNumber: phoneNumber,
+            success: true,
+            msgKey: result.msgKey
+          });
+          
+          console.log(`사용자 ${user.id}(${phoneNumber})에게 알림톡 전송 성공`);
         }
         
         // 너무 많은 요청을 한 번에 보내지 않도록 잠시 대기
-        await new Promise(resolve => setTimeout(resolve, 500));
+        await new Promise(resolve => setTimeout(resolve, 300));
       } catch (error) {
-        console.error(`사용자 ${user.kakaoId}에게 챗봇 메시지 전송 실패:`, error.message);
+        console.error(`사용자 ${user.id}에게 알림톡 전송 실패:`, error.message);
+        failedCount++;
+        resultDetails.push({
+          userId: user.id,
+          phoneNumber: user.phoneNumber,
+          success: false,
+          error: error.message
+        });
       }
     }
     
-    console.log(`챗봇을 통한 메시지 전송 완료 (개발 중)`);
+    return {
+      success: true,
+      totalSubscribers: subscribers.length,
+      sentCount,
+      failedCount,
+      details: resultDetails
+    };
   } catch (error) {
-    console.error('챗봇 메시지 전송 중 오류 발생:', error);
+    console.error('Bizgo 알림톡 전송 중 오류 발생:', error);
+    throw error;
   }
 }
 
@@ -176,76 +175,59 @@ async function createDailyQuestion() {
 }
 
 /**
- * 스케줄러 테스트 함수 (개발 중에 사용)
+ * 테스트용 알림톡 전송
  */
-async function testSendMessage() {
+async function testSendAlimTalk(userId, message) {
   try {
-    console.log('테스트 메시지 전송 시작...');
+    console.log('테스트 알림톡 전송 시작...');
     
     // 테스트 ID를 가진 사용자 찾기
-    const testUser = await prisma.user.findFirst({
-      where: { kakaoId: { not: null } }
-    });
-    
-    if (!testUser) {
-      console.log('테스트 사용자가 없습니다.');
-      return;
+    let testUser;
+    if (userId) {
+      testUser = await prisma.user.findUnique({
+        where: { id: userId }
+      });
+    } else {
+      testUser = await prisma.user.findFirst({
+        where: { phoneNumber: { not: null } }
+      });
     }
     
-    // 테스트 메시지 템플릿
-    const template = {
-      object_type: 'text',
-      text: `[CS Morning 테스트]\n\n이것은 테스트 메시지입니다.\n${new Date().toLocaleString('ko-KR')}`,
-      link: {
-        web_url: process.env.SERVICE_URL || 'https://csmorning.co.kr',
-        mobile_web_url: process.env.SERVICE_URL || 'https://csmorning.co.kr'
+    if (!testUser || !testUser.phoneNumber) {
+      console.log('유효한 전화번호를 가진 테스트 사용자가 없습니다.');
+      return { success: false, message: '유효한 전화번호를 찾을 수 없습니다.' };
+    }
+    
+    // 전화번호 형식 정리 (하이픈 제거)
+    const phoneNumber = testUser.phoneNumber.replace(/-/g, '');
+    
+    // 테스트 메시지 내용
+    const messageContent = message || `[CS Morning 테스트]\n\n이것은 테스트 알림톡입니다.\n${new Date().toLocaleString('ko-KR')}`;
+    
+    // 버튼 추가
+    const buttons = [
+      {
+        name: "웹사이트 방문하기",
+        type: "WL",
+        urlMobile: process.env.SERVICE_URL || 'https://csmorning.co.kr'
       }
-    };
+    ];
     
-    // 메시지 전송
-    await kakaoService.sendMessage(testUser.kakaoId, template);
-    console.log(`테스트 사용자 ${testUser.kakaoId}에게 메시지 전송 성공`);
+    // 알림톡 전송
+    const result = await bizgoService.sendAlimTalk(phoneNumber, messageContent, buttons);
     
-  } catch (error) {
-    console.error('테스트 메시지 전송 중 오류 발생:', error);
-  }
-}
-
-/**
- * 챗봇을 통한 테스트 메시지 전송
- */
-async function testSendChatbotMessage(userId, message) {
-  try {
-    console.log('챗봇 테스트 메시지 전송 시작...');
+    console.log(`테스트 사용자 ${testUser.id}(${phoneNumber})에게 알림톡 전송 성공`);
     
-    // 사용자 찾기
-    const user = await prisma.user.findUnique({
-      where: { id: userId }
-    });
-    
-    if (!user || !user.kakaoId) {
-      console.log('유효한 카카오 ID를 가진 사용자가 없습니다.');
-      return { success: false, message: '유효한 카카오 ID를 찾을 수 없습니다.' };
-    }
-    
-    // 챗봇 응답 포맷 (실제 카카오 i 오픈빌더에서 사용하는 포맷)
-    const responseTemplate = kakaoService.formatSkillResponse(message || `[CS Morning 테스트]\n\n이것은 챗봇 테스트 메시지입니다.\n${new Date().toLocaleString('ko-KR')}`);
-    
-    // 실제 구현에서는 카카오에서 제공하는 API로 대체
-    console.log(`사용자 ${user.kakaoId}에게 챗봇 테스트 메시지를 전송합니다.`);
-    console.log('메시지 내용:', responseTemplate);
-    
-    // 성공 응답 반환
     return {
       success: true,
-      userId: user.id,
-      kakaoId: user.kakaoId,
-      message: message || `[CS Morning 테스트] 이것은 챗봇 테스트 메시지입니다.`,
-      sentAt: new Date()
+      userId: testUser.id,
+      phoneNumber: phoneNumber,
+      message: messageContent,
+      sentAt: new Date(),
+      msgKey: result.msgKey
     };
-    
   } catch (error) {
-    console.error('챗봇 테스트 메시지 전송 중 오류 발생:', error);
+    console.error('테스트 알림톡 전송 중 오류 발생:', error);
     return { success: false, message: error.message };
   }
 }
@@ -254,6 +236,6 @@ module.exports = {
   scheduleDailyQuestion,
   sendDailyContent,
   createDailyQuestion,
-  testSendMessage,
-  testSendChatbotMessage
+  testSendAlimTalk,
+  sendToBizgoAlimTalk
 };
