@@ -53,10 +53,10 @@ const swaggerUiOptions = {
 
 // Express에 Swagger 미들웨어 등록
 const setupSwagger = (app) => {
-  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs, swaggerUiOptions));
+  app.use('/僕の話', swaggerUi.serve, swaggerUi.setup(specs, swaggerUiOptions));
   
   // Swagger JSON 엔드포인트
-  app.get('/api-docs.json', (req, res) => {
+  app.get('/僕の話.json', (req, res) => {
     res.setHeader('Content-Type', 'application/json');
     res.send(specs);
   });

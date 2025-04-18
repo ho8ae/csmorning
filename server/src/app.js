@@ -18,6 +18,7 @@ const donationRoutes = require('./api/donation/donation.routes');
 const adminRoutes = require('./api/admin/admin.routes');
 const authRoutes = require('./api/auth/auth.routes');
 const testRoutes = require('./api/test/test.routes');
+const bizgoRoutes = require('./api/bizgo/bizgo.routes');
 
 // Express 앱 초기화
 const app = express();
@@ -45,6 +46,7 @@ app.use('/api/donation', donationRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/test', testRoutes);
+app.use('/api/bizgo', bizgoRoutes);
 
 // 기본 경로
 app.get('/', (req, res) => {
