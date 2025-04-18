@@ -44,7 +44,7 @@ const handleKakaoMessage = async (req, res, next) => {
       utterance.includes('도움말')
     ) {
       responseText =
-        '안녕하세요! CS Morning 챗봇입니다.\n\n다음 명령어를 사용할 수 있어요:\n- 오늘의 질문: 오늘의 CS 질문을 받아볼 수 있어요.\n- 구독: CS Morning을 구독합니다.\n- 구독 취소: 구독을 해지합니다.';
+        '안녕하세요! CS Morning 챗봇입니다.\n\n다음 명령어를 사용할 수 있어요:\n- 오늘의 질문: 오늘의 CS 질문을 받아볼 수 있어요.\n- 구독하기: CS Morning을 구독합니다.\n- 도움말: CS Morning의 사용법을 안내합니다.\n- 계정 연동: CS Morning 웹사이트와 계정을 연동합니다.\n\n원하는 명령어를 입력해보세요!';
     } else if (
       utterance.includes('오늘의 질문') ||
       utterance.includes('문제')
@@ -76,7 +76,7 @@ const handleKakaoMessage = async (req, res, next) => {
           options = '선택지 형식이 올바르지 않습니다.';
         }
 
-        responseText = `[오늘의 CS 질문]\n\n${question.content}\n\n${options}\n\n답변은 번호로 입력해주세요 (예: 1)`;
+        responseText = `[오늘의 CS 질문]\n\n 카테고리: ${question.category}\n 난이도: ${question.difficulty}\n\n${question.text}\n\n${options}\n\n답변은 번호로 입력해주세요 (예: 1)`;
       }
     } else if (/^[1-9]\d*$/.test(utterance.trim())) {
       // 숫자 응답 처리
