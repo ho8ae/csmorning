@@ -29,7 +29,7 @@ model User {
   birthYear     Int?      // 출생연도
   phoneNumber   String?   // 카카오계정(전화번호)
   
-  isSubscribed  Boolean   @default(true)
+  isSubscribed  Boolean   @default(false)
   isTemporary   Boolean   @default(false)
   totalAnswered Int       @default(0)
   correctAnswers Int      @default(0)
