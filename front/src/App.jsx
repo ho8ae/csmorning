@@ -28,10 +28,11 @@ import PaymentSuccessPage from './pages/PaymentSuccessPage';
 import CheckoutPage from './pages/CheckoutPage';
 import SubscriptionTermsPage from './pages/SubscriptionTermsPage';
 import RefundPolicyPage from './pages/RefundPolicyPage';
-
+import DebateDetailPage from './pages/DebateDetailPage';
+import DebateListPage from './pages/DebateListPage';
 
 function App() {
-  const { checkAuth, isAuthenticated } = useAuthStore(); 
+  const { checkAuth, isAuthenticated } = useAuthStore();
 
   // 초기 인증 상태 확인
   useEffect(() => {
@@ -44,12 +45,12 @@ function App() {
         {/* 공용 라우트 */}
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} /> 
+        <Route path="/register" element={<RegisterPage />} />
         <Route path="/auth/kakao/callback" element={<KakaoCallbackPage />} />
 
         <Route path="/kakao-callback" element={<KakaoCallbackPage />} />
-        
-        <Route path="/terms" element={<TermsPage/>} />
+
+        <Route path="/terms" element={<TermsPage />} />
         <Route path="/privacy" element={<PrivacyContentPage />} />
         <Route path="/kakao-link" element={<KakaoLinkPage />} />
 
@@ -58,6 +59,9 @@ function App() {
         <Route path="/payment-success" element={<PaymentSuccessPage />} />
         <Route path="/subscription-terms" element={<SubscriptionTermsPage />} />
         <Route path="/refund-policy" element={<RefundPolicyPage />} />
+
+        <Route path="/premium/discussions" element={<DebateListPage />} />
+        <Route path="/premium/discussions/:id" element={<DebateDetailPage />} />
 
         {/* 사용자 인증 라우트 */}
         <Route path="/dashboard" element={<DashboardPage />} />
