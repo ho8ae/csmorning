@@ -136,27 +136,70 @@ const handleKakaoMessage = async (req, res, next) => {
         }
       }
     } else if (utterance.includes('계정 연동')) {
-      
-      const userId = userRequest.user.id; // 이 변수는 실제로는 카카오 채널 ID입니다
+      try {
+        // 카카오 채널 ID 추출
+        const kakaoChannelId = userRequest.user.id;
 
-      // 수정된 코드:
-      const kakaoChannelId = userRequest.user.id; // 변수명을 명확히 합니다
+        // 이미 연동된 계정인지 확인
+        let mapping = null;
+        try {
+          mapping = await req.prisma.userKakaoMapping.findUnique({
+            where: { kakaoChannelId },
+            include: { user: true },
+          });
+        } catch (error) {
+          console.error('매핑 조회 중 오류:', error);
+        }
 
-      // 매핑 찾기
-      const mapping = await req.prisma.userKakaoMapping.findUnique({
-        where: { kakaoChannelId },
-        include: { user: true },
-      });
+        // 이미 연동된 계정인 경우
+        if (mapping && mapping.user && mapping.user.isTemporary === false) {
+          responseText = `이미 계정이 연동되어 있습니다. CS Morning 웹사이트에서 동일한 계정으로 서비스를 이용하실 수 있습니다.`;
+        } else {
+          // 계정 연동 코드 생성
+          const linkCode = await webhookService.generateLinkCode(
+            req.prisma,
+            kakaoChannelId,
+          );
 
-      if (mapping && !mapping.user.isTemporary) {
-        responseText = `이미 계정이 연동되어 있습니다. CS Morning 웹사이트에서 동일한 계정으로 서비스를 이용하실 수 있습니다.`;
-      } else {
-        // 계정 연동 코드 생성 후 반환
-        const linkCode = await webhookService.generateLinkCode(
-          req.prisma,
-          kakaoChannelId,
-        );
-        responseText = `계정 연동 코드가 생성되었습니다.\n\n코드: ${linkCode}\n\nCS Morning 웹사이트(https://csmorning.co.kr)에서 계정 연동 메뉴를 선택한 후 이 코드를 입력해주세요. 연동 코드는 10분간 유효합니다.`;
+          // 서비스 도메인
+          const serviceDomain =
+            process.env.NODE_ENV === 'production'
+              ? 'https://csmorning.co.kr'
+              : 'http://localhost:5173';
+
+          // 카카오 챗봇 응답 - 바로 웹링크로 연결되는 버튼 추가
+          const responseBody = {
+            version: '2.0',
+            template: {
+              outputs: [
+                {
+                  simpleText: {
+                    text: `계정 연동 코드가 생성되었습니다.\n\n코드: ${linkCode}\n\n아래 '계정 연동하기' 버튼을 클릭하면 자동으로 연동됩니다. 또는 CS Morning 웹사이트에서 계정 연동 메뉴를 선택한 후 이 코드를 입력해주세요. 연동 코드는 10분간 유효합니다.`,
+                  },
+                },
+              ],
+              quickReplies: [
+                {
+                  label: '계정 연동하기',
+                  action: 'webLink',
+                  webLinkUrl: `${serviceDomain}/kakao-link?code=${linkCode}`,
+                },
+                {
+                  label: '오늘의 질문',
+                  action: 'message',
+                  messageText: '오늘의 질문',
+                },
+              ],
+            },
+          };
+
+          // 직접 응답 객체를 반환
+          return res.status(200).json(responseBody);
+        }
+      } catch (error) {
+        console.error('계정 연동 처리 중 오류:', error);
+        responseText =
+          '계정 연동 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
       }
     } else if (utterance.includes('구독')) {
       if (utterance.includes('취소') || utterance.includes('해지')) {
@@ -245,7 +288,7 @@ const handleAccountLinking = async (req, res, next) => {
     const { userRequest } = req.body;
 
     if (!userRequest || !userRequest.user || !userRequest.user.id) {
-      return res.status(400).json({
+      return res.status(200).json({
         version: '2.0',
         template: {
           outputs: [
@@ -260,6 +303,44 @@ const handleAccountLinking = async (req, res, next) => {
     }
 
     const kakaoChannelId = userRequest.user.id;
+
+    // 이미 연동된 계정인지 확인
+    let mapping = null;
+    try {
+      mapping = await req.prisma.userKakaoMapping.findUnique({
+        where: { kakaoChannelId },
+        include: { user: true },
+      });
+      console.log('매핑 조회 결과:', mapping);
+    } catch (error) {
+      console.error('매핑 조회 중 오류:', error);
+    }
+
+    // 이미 연동된 계정인 경우
+    if (mapping && mapping.user && mapping.user.isTemporary === false) {
+      const responseBody = {
+        version: '2.0',
+        template: {
+          outputs: [
+            {
+              simpleText: {
+                text: `이미 계정이 연동되어 있습니다. CS Morning 웹사이트에서 동일한 계정으로 서비스를 이용하실 수 있습니다.`,
+              },
+            },
+          ],
+          quickReplies: [
+            {
+              label: '오늘의 질문',
+              action: 'message',
+              messageText: '오늘의 질문',
+            },
+          ],
+        },
+      };
+
+      res.setHeader('Content-Type', 'application/json; charset=utf-8');
+      return res.status(200).json(responseBody);
+    }
 
     // 연동 코드 생성
     const linkCode = await webhookService.generateLinkCode(
