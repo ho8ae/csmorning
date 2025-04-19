@@ -136,12 +136,21 @@ const handleKakaoMessage = async (req, res, next) => {
         }
       }
     } else if (utterance.includes('계정 연동')) {
-      // 계정 연동 코드 생성 후 반환
-      const linkCode = await webhookService.generateLinkCode(
-        req.prisma,
-        userId,
-      );
-      responseText = `계정 연동 코드가 생성되었습니다.\n\n코드: ${linkCode}\n\nCS Morning 웹사이트(csmorning.co.kr)에서 계정 연동 메뉴를 선택한 후 이 코드를 입력해주세요. 연동 코드는 10분간 유효합니다.`;
+      const mapping = await prisma.userKakaoMapping.findUnique({
+        where: { kakaoChannelId: userId },
+        include: { user: true },
+      });
+
+      if (mapping && !mapping.user.isTemporary) {
+        responseText = `이미 계정이 연동되어 있습니다. CS Morning 웹사이트에서 동일한 계정으로 서비스를 이용하실 수 있습니다.`;
+      } else {
+        // 계정 연동 코드 생성 후 반환
+        const linkCode = await webhookService.generateLinkCode(
+          req.prisma,
+          userId,
+        );
+        responseText = `계정 연동 코드가 생성되었습니다.\n\n코드: ${linkCode}\n\nCS Morning 웹사이트(https://csmorning.co.kr)에서 계정 연동 메뉴를 선택한 후 이 코드를 입력해주세요. 연동 코드는 10분간 유효합니다.`;
+      }
     } else if (utterance.includes('구독')) {
       if (utterance.includes('취소') || utterance.includes('해지')) {
         await req.prisma.user.update({
