@@ -162,10 +162,59 @@ export const statsAPI = {
   },
 };
 
+// 프리미엄 기능 관련 API
+export const premiumAPI = {
+  // 활동 캘린더(잔디) 데이터 조회
+  getActivityCalendar: async (startDate, endDate) => {
+    const params = {};
+    if (startDate) params.startDate = startDate;
+    if (endDate) params.endDate = endDate;
+    
+    const response = await apiClient.get('/premium/activity-calendar', { params });
+    return response.data.data;
+  },
+  
+  // 성별 통계 조회
+  getStatisticsByGender: async () => {
+    const response = await apiClient.get('/premium/statistics/gender');
+    return response.data.data;
+  },
+  
+  // 연령대별 통계 조회
+  getStatisticsByAgeGroup: async () => {
+    const response = await apiClient.get('/premium/statistics/age-group');
+    return response.data.data;
+  },
+  
+  // 상위 성과자 조회
+  getTopPerformers: async (limit = 10) => {
+    const response = await apiClient.get('/premium/statistics/top-performers', { 
+      params: { limit } 
+    });
+    return response.data.data;
+  },
+  
+  // 토론 목록 조회
+  getDiscussions: async (type, page = 1, limit = 10) => {
+    const params = { page, limit };
+    if (type) params.type = type;
+    
+    const response = await apiClient.get('/premium/discussions', { params });
+    return response.data.data;
+  },
+  
+  // 토론 상세 조회
+  getDiscussionById: async (id) => {
+    const response = await apiClient.get(`/premium/discussions/${id}`);
+    return response.data.data;
+  },
+};
+
 export default {
   auth: authAPI,
   questions: questionsAPI,
   users: usersAPI,
   donations: donationsAPI,
   stats: statsAPI,
+  premium: premiumAPI,
 };
