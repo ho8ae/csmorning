@@ -37,9 +37,18 @@ model User {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
+  // premium 관련 필드
+  activityCalendar ActivityCalendar[]
+  discussionComments DiscussionComment[]
+  discussionReactions DiscussionReaction[]
+
   responses    Response[]
   donations    Donation[]
   kakaoMappings   UserKakaoMapping[]
+
+  // 프리미엄 멤버십 관련 필드
+  isPremium       Boolean  @default(false)
+  premiumUntil    DateTime?
 }
 
 model Question {
@@ -107,4 +116,60 @@ model UserKakaoMapping {
   linkCodeExpiry  DateTime? // 연동 코드 만료 시간
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
+}
+
+model ActivityCalendar {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+  date      DateTime @db.Date // 날짜만 필요
+  count     Int      @default(1) // 하루에 몇 개의 활동을 했는지
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, date]) // 사용자와 날짜의 조합은 유일해야 함
+}
+
+// 토론을 위한 모델
+model Discussion {
+  id            Int      @id @default(autoincrement())
+  title         String
+  description   String
+  type          String   // 'debate' 또는 'free'
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  comments      DiscussionComment[]
+  reactions     DiscussionReaction[]
+}
+
+model DiscussionComment {
+  id            Int      @id @default(autoincrement())
+  discussionId  Int
+  discussion    Discussion @relation(fields: [discussionId], references: [id], onDelete: Cascade)
+  userId        Int
+  user          User     @relation(fields: [userId], references: [id])
+  content       String
+  stance        String?  // 'for', 'against', 'neutral' - debate 형식일 때만 사용
+  parentId      Int?     // 답글을 위한 필드
+  parent        DiscussionComment? @relation("CommentReplies", fields: [parentId], references: [id])
+  replies       DiscussionComment[] @relation("CommentReplies")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  reactions     DiscussionReaction[]
+}
+
+model DiscussionReaction {
+  id            Int      @id @default(autoincrement())
+  discussionId  Int
+  discussion    Discussion @relation(fields: [discussionId], references: [id], onDelete: Cascade)
+  userId        Int
+  user          User     @relation(fields: [userId], references: [id])
+  commentId     Int?     // 특정 댓글에 대한 반응인 경우
+  comment       DiscussionComment? @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  emoji         String   // 이모지 코드
+  createdAt     DateTime @default(now())
+
+  @@unique([userId, discussionId, commentId, emoji]) // 중복 반응 방지
 }
