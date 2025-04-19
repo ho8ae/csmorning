@@ -1,8 +1,8 @@
 import React, { useEffect } from 'react';
 import { motion } from 'framer-motion'; // eslint-disable-line
-import FeatureShowcase from '../components/premium/FeatureShowcase';
-import PricingSection from '../components/premium/PricingSection';
-import FaqSection from '../components/premium/FaqSection';
+import FeatureShowcase from '../components/premiumFeature/FeatureShowcase';
+import PricingSection from '../components/premiumFeature/PricingSection';
+import FaqSection from '../components/premiumFeature/FaqSection';
 import Navbar from '../components/common/Navbar';
 import Footer from '../components/landing/Footer';
 
