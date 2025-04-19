@@ -53,7 +53,7 @@ const Hero = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.8, duration: 1, type: "spring" }}
       >
-        <div cl>
+        <div>
             <img src="/assets/landing/img_02.png" alt="KakaoTalk" className="w-full h-full rounded-t-2xl rounded-l-2xl shadow-xl" />
         </div>
         {/* <div className="bg-black rounded-t-2xl rounded-l-2xl p-4 shadow-xl">

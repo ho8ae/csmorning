@@ -8,7 +8,7 @@ const AccountLinkButton = () => {
     <>
       <button
         onClick={() => setIsModalOpen(true)}
-        className="flex items-center px-4 py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 transition-colors"
+        className="flex items-center md:px-4 md:py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 transition-colors"
       >
         <svg 
           className="w-5 h-5 mr-2" 
@@ -24,7 +24,7 @@ const AccountLinkButton = () => {
             d="M13 10V3L4 14h7v7l9-11h-7z"
           ></path>
         </svg>
-        카카오톡 채널 연동
+        <p className='text-sm p-0.5'>카카오톡 채널 연동</p>
       </button>
 
       <AccountLinkingModal 
