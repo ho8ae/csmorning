@@ -8,6 +8,7 @@ const QuestionCard = ({
   isCorrect,
   handleAnswerSubmit,
 }) => {
+  // 질문이 없는 경우 처리
   if (!todayQuestion) {
     return (
       <motion.div
@@ -26,6 +27,37 @@ const QuestionCard = ({
     );
   }
 
+  // options를 파싱하여 배열로 변환
+  const getOptionsArray = () => {
+    const options = todayQuestion.question.options;
+
+    // options가 문자열인 경우 JSON 파싱
+    if (typeof options === 'string') {
+      try {
+        return JSON.parse(options);
+      } catch (error) {
+        console.error('Options 파싱 오류:', error);
+        return [];
+      }
+    }
+
+    // 이미 배열인 경우
+    if (Array.isArray(options)) {
+      return options;
+    }
+
+    // 그 외의 경우
+    return [];
+  };
+
+  // 옵션 배열 가져오기
+  const optionsArray = getOptionsArray();
+
+  // 정답 옵션 가져오기 (정답이 있는 경우)
+  const correctOption =
+    todayQuestion.question.correctOption  ;
+  
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -39,15 +71,17 @@ const QuestionCard = ({
 
       <div className="p-4 mb-4 bg-blue-50 rounded-lg">
         <p className="text-lg font-medium text-blue-800">
-          {todayQuestion.text}
+          {todayQuestion.question.text}
         </p>
-        {todayQuestion.description && (
-          <p className="mt-2 text-blue-600">{todayQuestion.description}</p>
+        {todayQuestion.question.description && (
+          <p className="mt-2 text-blue-600">
+            {todayQuestion.question.description}
+          </p>
         )}
       </div>
 
       <div className="mb-6 space-y-3">
-        {(todayQuestion.options || []).map((option, index) => (
+        {optionsArray.map((option, index) => (
           <button
             key={index}
             onClick={() => !isAnswered && setSelectedAnswer(index)}
@@ -55,18 +89,18 @@ const QuestionCard = ({
             className={`w-full p-3 text-left rounded-lg transition-colors ${
               selectedAnswer === index
                 ? isAnswered
-                  ? index === todayQuestion.correctOption
+                  ? index === correctOption
                     ? 'bg-green-100 border border-green-500'
                     : 'bg-red-100 border border-red-500'
                   : 'bg-blue-100 border border-blue-500'
-                : isAnswered && index === todayQuestion.correctOption
+                : isAnswered && index === correctOption
                 ? 'bg-green-100 border border-green-500'
                 : 'bg-gray-50 hover:bg-gray-100 border border-gray-200'
             }`}
           >
             <div className="flex items-start">
               <span className="flex items-center justify-center w-6 h-6 mr-3 text-sm rounded-full bg-blue-100 text-blue-800">
-                {index + 1}
+                {index+1}
               </span>
               <span>{option}</span>
             </div>
@@ -88,11 +122,13 @@ const QuestionCard = ({
             {isCorrect ? '정답입니다! 👍' : '틀렸습니다. 😔'}
           </h3>
           <p className="mb-2 text-blue-700">
-            정답: {todayQuestion.options[todayQuestion.correctOption]}
+            정답: {optionsArray[correctOption]}
           </p>
           <div className="p-3 bg-white rounded-lg">
             <h4 className="mb-1 font-medium text-blue-800">설명:</h4>
-            <p className="text-gray-700">{todayQuestion.explanation}</p>
+            <p className="text-gray-700">
+              {todayQuestion.question.explanation}
+            </p>
           </div>
         </div>
       )}

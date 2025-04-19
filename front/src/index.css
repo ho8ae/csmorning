@@ -26,3 +26,17 @@ html,body,#root {
     transition-duration: 300ms;
     transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 }
+
+/* 캘린더 그리드를 위한 사용자 정의 클래스 */
+.grid-cols-53 {
+    grid-template-columns: repeat(53, minmax(0, 1fr));
+  }
+  
+  /* 텍스트 라인 제한 */
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
