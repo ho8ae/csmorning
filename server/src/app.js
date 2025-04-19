@@ -19,6 +19,7 @@ const adminRoutes = require('./api/admin/admin.routes');
 const authRoutes = require('./api/auth/auth.routes');
 const testRoutes = require('./api/test/test.routes');
 const bizgoRoutes = require('./api/bizgo/bizgo.routes');
+const premiumRoutes = require('./api/premium/premium.routes');
 
 // Express 앱 초기화
 const app = express();
@@ -47,6 +48,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/test', testRoutes);
 app.use('/api/bizgo', bizgoRoutes);
+app.use('/api/premium', premiumRoutes);
 
 // 기본 경로
 app.get('/', (req, res) => {

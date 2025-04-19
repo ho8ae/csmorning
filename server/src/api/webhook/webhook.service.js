@@ -62,7 +62,8 @@ const getUserResponseForQuestion = async (prisma, userId, dailyQuestionId) => {
  * 사용자 응답 생성
  */
 const createResponse = async (prisma, userId, dailyQuestionId, answer, isCorrect) => {
-  return await prisma.response.create({
+  // 응답 생성
+  const response = await prisma.response.create({
     data: {
       userId,
       dailyQuestionId,
@@ -70,6 +71,17 @@ const createResponse = async (prisma, userId, dailyQuestionId, answer, isCorrect
       isCorrect
     }
   });
+  
+  // 활동 기록 업데이트 (잔디 기능)
+  try {
+    const premiumService = require('../premium/premium.service');
+    await premiumService.updateActivityOnAnswer(prisma, userId);
+  } catch (error) {
+    console.error('활동 기록 업데이트 중 오류:', error);
+    // 메인 기능에 영향을 주지 않도록 오류를 무시
+  }
+  
+  return response;
 };
 
 /**
