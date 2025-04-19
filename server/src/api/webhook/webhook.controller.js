@@ -135,73 +135,125 @@ const handleKakaoMessage = async (req, res, next) => {
           }
         }
       }
-    } else if (utterance.includes('계정 연동')) {
+    }else if (utterance.includes('계정 연동')) {
       try {
         // 카카오 채널 ID 추출
         const kakaoChannelId = userRequest.user.id;
-
-        // 이미 연동된 계정인지 확인
+        console.log('카카오 채널 ID:', kakaoChannelId);
+        
+        // 매핑 조회
         let mapping = null;
         try {
           mapping = await req.prisma.userKakaoMapping.findUnique({
             where: { kakaoChannelId },
-            include: { user: true },
+            include: { user: true }
           });
+          console.log('매핑 조회 결과:', mapping);
         } catch (error) {
           console.error('매핑 조회 중 오류:', error);
         }
-
-        // 이미 연동된 계정인 경우
+        
+        // 이미 연동된 계정인지 확인
         if (mapping && mapping.user && mapping.user.isTemporary === false) {
-          responseText = `이미 계정이 연동되어 있습니다. CS Morning 웹사이트에서 동일한 계정으로 서비스를 이용하실 수 있습니다.`;
-        } else {
-          // 계정 연동 코드 생성
-          const linkCode = await webhookService.generateLinkCode(
-            req.prisma,
-            kakaoChannelId,
-          );
-
-          // 서비스 도메인
-          const serviceDomain =
-            process.env.NODE_ENV === 'production'
-              ? 'https://csmorning.co.kr'
-              : 'http://localhost:5173';
-
-          // 카카오 챗봇 응답 - 바로 웹링크로 연결되는 버튼 추가
-          const responseBody = {
-            version: '2.0',
+          // 이미 연동된 계정인 경우
+          return res.status(200).json({
+            version: "2.0",
             template: {
               outputs: [
                 {
-                  simpleText: {
-                    text: `계정 연동 코드가 생성되었습니다.\n\n코드: ${linkCode}\n\n아래 '계정 연동하기' 버튼을 클릭하면 자동으로 연동됩니다. 또는 CS Morning 웹사이트에서 계정 연동 메뉴를 선택한 후 이 코드를 입력해주세요. 연동 코드는 10분간 유효합니다.`,
-                  },
-                },
+                  textCard: {
+                    title: "계정 연동 완료",
+                    description: "이미 CS Morning 웹사이트와 계정이 연동되어 있습니다.\n웹사이트에서 동일한 계정으로 서비스를 이용하실 수 있습니다.",
+                    buttons: [
+                      {
+                        action: "webLink",
+                        label: "CS Morning 웹사이트",
+                        webLinkUrl: "https://csmorning.co.kr"
+                      }
+                    ]
+                  }
+                }
               ],
               quickReplies: [
-                {
-                  label: '계정 연동하기',
-                  action: 'webLink',
-                  webLinkUrl: `${serviceDomain}/kakao-link?code=${linkCode}`,
-                },
                 {
                   label: '오늘의 질문',
                   action: 'message',
                   messageText: '오늘의 질문',
                 },
+                {
+                  label: '도움말',
+                  action: 'message',
+                  messageText: '도움말',
+                }
+              ]
+            }
+          });
+        } else {
+          // 계정 연동 코드 생성
+          const linkCode = await webhookService.generateLinkCode(req.prisma, kakaoChannelId);
+          
+          // 서비스 도메인
+          const serviceDomain = process.env.NODE_ENV === 'production'
+            ? 'https://csmorning.co.kr'
+            : 'http://localhost:5173';
+          
+          // 계정 연동이 필요한 경우 - textCard 형식으로 응답
+          return res.status(200).json({
+            version: "2.0",
+            template: {
+              outputs: [
+                {
+                  textCard: {
+                    title: "CS Morning 계정 연동",
+                    description: `계정 연동 코드가 생성되었습니다.\n\n코드: ${linkCode}\n\n아래 버튼을 통해 CS Morning 웹사이트에서 계정을 연동하세요.\n연동 코드는 10분간 유효합니다.`,
+                    buttons: [
+                      {
+                        action: "webLink",
+                        label: "웹사이트에서 연동하기",
+                        webLinkUrl: `${serviceDomain}/kakao-link?code=${linkCode}`
+                      },
+                      {
+                        action: "webLink",
+                        label: "CS Morning 웹사이트",
+                        webLinkUrl: "https://csmorning.co.kr"
+                      }
+                    ]
+                  }
+                }
               ],
-            },
-          };
-
-          // 직접 응답 객체를 반환
-          return res.status(200).json(responseBody);
+              quickReplies: [
+                {
+                  label: '오늘의 질문',
+                  action: 'message',
+                  messageText: '오늘의 질문',
+                },
+                {
+                  label: '도움말',
+                  action: 'message',
+                  messageText: '도움말',
+                }
+              ]
+            }
+          });
         }
       } catch (error) {
         console.error('계정 연동 처리 중 오류:', error);
-        responseText =
-          '계정 연동 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
+        
+        // 오류 발생 시 응답
+        return res.status(200).json({
+          version: "2.0",
+          template: {
+            outputs: [
+              {
+                simpleText: {
+                  text: '계정 연동 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.',
+                },
+              },
+            ],
+          },
+        });
       }
-    } else if (utterance.includes('구독')) {
+    }else if (utterance.includes('구독')) {
       if (utterance.includes('취소') || utterance.includes('해지')) {
         await req.prisma.user.update({
           where: { id: user.id },
@@ -250,7 +302,7 @@ const handleKakaoMessage = async (req, res, next) => {
             messageText: '도움말',
           },
           {
-            label: '계정 연동하기',
+            label: '계정 연동',
             action: 'message',
             messageText: '계정 연동',
           },
