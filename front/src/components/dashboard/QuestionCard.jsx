@@ -17,7 +17,7 @@ const QuestionCard = ({
         transition={{ duration: 0.5, delay: 0.4 }}
         className="p-6 mx-auto mb-8 bg-white rounded-lg shadow-md max-w-3xl"
       >
-        <h2 className="mb-6 text-2xl font-bold text-center text-blue-900">
+        <h2 className="mb-6 text-2xl text-center text-blue-900 font-['chosunGu']">
           오늘의 CS 문제
         </h2>
         <div className="p-4 text-center text-gray-500">
@@ -65,12 +65,12 @@ const QuestionCard = ({
       transition={{ duration: 0.5, delay: 0.4 }}
       className="p-6 mx-auto mb-8 bg-white rounded-lg shadow-md max-w-3xl"
     >
-      <h2 className="mb-6 text-2xl font-bold text-center text-blue-900">
+      <h2 className="mb-6 text-2xl font-bold text-center text-blue-900 ">
         오늘의 CS 문제
       </h2>
 
       <div className="p-4 mb-4 bg-blue-50 rounded-lg">
-        <p className="text-lg font-medium text-blue-800">
+        <p className="text-lg font-medium text-blue-800 ">
           {todayQuestion.question.text}
         </p>
         {todayQuestion.question.description && (

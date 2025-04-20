@@ -11,7 +11,7 @@ import DashboardHeader from '../components/dashboard/DashboardHeader';
 import StatsOverview from '../components/dashboard/StatsOverview';
 import QuestionCard from '../components/dashboard/QuestionCard';
 import HelpSection from '../components/dashboard/HelpSection';
-import Footer from '../components/dashboard/Footer';
+import Footer from '../components/landing/Footer';
 
 // 프리미엄 위젯 컴포넌트
 import ActivityCalendarWidget from '../components/dashboard/ActivityCalendarWidget';

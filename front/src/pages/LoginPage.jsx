@@ -46,7 +46,7 @@ function LoginPage() {
   }
   
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gradient-to-b from-blue-900 to-blue-700">
+    <div className="flex items-center justify-center min-h-screen bg-gradient-to-b from-blue-300 to-blue-900">
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -54,8 +54,8 @@ function LoginPage() {
         className="w-full max-w-md p-8 space-y-8 bg-white rounded-lg shadow-xl"
       >
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-blue-900">CS Morning</h1>
-          <p className="mt-2 text-gray-600">{isLoginMode ? '로그인' : '회원가입'}</p>
+          <h1 className="text-2xl font-['SBAggroB'] text-blue-900 ">CS Morning</h1>
+          <p className="mt-2 text-gray-600 font-['ChosunGu']">{isLoginMode ? '로그인' : '회원가입'}</p>
         </div>
         
         {error && (
@@ -98,7 +98,7 @@ function LoginPage() {
               type="submit"
               disabled={isLoading}
               className={`w-full px-4 py-2 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 ${
-                isLoginMode ? 'bg-blue-600 hover:bg-blue-700 focus:ring-blue-500' : 'bg-yellow-500 hover:bg-yellow-600 focus:ring-yellow-500'
+                isLoginMode ? 'bg-blue-800 hover:bg-blue-900 focus:ring-blue-900' : 'bg-yellow-500 hover:bg-yellow-600 focus:ring-yellow-500'
               }`}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}

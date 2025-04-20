@@ -1,7 +1,7 @@
 import { Helmet } from 'react-helmet-async';
 import DebateList from '../components/debate/DebateList';
 import Navbar from '../components/common/Navbar';
-import Footer from '../components/dashboard/Footer';
+import Footer from '../components/landing/Footer';
 
 const DebateListPage = () => {
   return (
