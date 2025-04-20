@@ -45,13 +45,13 @@ const Features = () => {
     <section className="py-16 bg-white">
       <div className="container mx-auto px-6">
         <motion.h2 
-          className="text-3xl font-bold text-center text-blue-900 mb-12"
+          className="text-3xl font-bold text-center text-blue-900 mb-12 font-['SBAggroB']"
           initial={{ opacity: 0, y: -20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5 }}
         >
-          CS Morning의 특징
+          <span className='text-yellow-300'>CS</span> Morning <span className="font-['NanumBarunpen']">의 특징</span>
         </motion.h2>
 
         <motion.div 

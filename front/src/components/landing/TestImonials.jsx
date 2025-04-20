@@ -41,7 +41,7 @@ const Testimonials = () => {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5 }}
-          className="text-3xl font-bold text-center text-blue-900 mb-12"
+          className="text-3xl font-bold text-center text-blue-900 mb-12 font-['nanumBarunpen']"
         >
           사용자 후기
         </motion.h2>

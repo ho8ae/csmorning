@@ -64,7 +64,7 @@ const Navbar = () => {
 
   return (
     <nav className={`fixed w-full z-50 transition-all duration-300 ${
-      scrolled ? 'py-2 bg-blue-900 shadow-lg' : 'py-4 bg-transparent'
+      scrolled ? 'py-2 bg-blue-950 shadow-lg' : 'py-4 bg-transparent'
     }`}>
       <div className="container mx-auto px-6">
         <div className="flex justify-between items-center">
@@ -75,8 +75,8 @@ const Navbar = () => {
             transition={{ duration: 0.5 }}
             className="flex items-center"
           >
-            <a href="#" className="text-2xl font-bold text-white flex items-center">
-              <span className="text-yellow-400 mr-1">CS</span> Morning
+            <a href="#" className="text-2xl font-bold text-white flex items-center font-['SBAggroB']">
+              <span className="text-yellow-400 mr-1 ">CS</span> Morning
             </a>
           </motion.div>
 
@@ -131,14 +131,18 @@ const Navbar = () => {
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.3 }}
-            className="md:hidden bg-blue-800"
+            className={`md:hidden transition-colors duration-300 ${
+              scrolled ? 'bg-blue-950' : 'bg-blue-350 backdrop-blur-sm'
+            }`}
           >
             <div className="container mx-auto px-6 py-4">
               {navLinks.map((link, i) => (
                 <a
                   key={i}
                   href={link.href}
-                  className="block py-2 text-blue-100 hover:text-yellow-300"
+                  className={`block py-2 transition duration-300 ${
+                    scrolled ? 'text-blue-100 hover:text-yellow-300' : 'text-white hover:text-yellow-400'
+                  }`}
                   onClick={() => setIsOpen(false)}
                 >
                   {link.name}

@@ -30,10 +30,10 @@ const HowItWorks = () => {
           transition={{ duration: 0.5 }}
           className="text-center mb-12"
         >
-          <h2 className="text-3xl font-bold text-blue-900">
+          <h2 className="text-3xl font-bold text-blue-900 font-['NanumBarunpen']">
             어떻게 사용하나요?
           </h2>
-          <p className="text-blue-800 mt-2">
+          <p className="text-blue-800 mt-2 font-['ChosunGu']">
             간단한 3단계로 CS Morning을 시작하세요
           </p>
         </motion.div>

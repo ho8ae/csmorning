@@ -7,6 +7,30 @@
     font-style: normal;
 }
 
+@font-face {
+    font-family: 'SBAggroB';
+    src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_2108@1.1/SBAggroB.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'ChosunGu';
+    src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_20-04@1.0/ChosunGu.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+}
+
+
+.text-main-yellow{
+    color: #FFFB00   
+}
+
+.text-main-navyblue{
+    color: #344CB7   
+}
+
+
 /* 가로 스크롤 방지 스타일 추가 */
 html,body,#root {
     width:  100%;
