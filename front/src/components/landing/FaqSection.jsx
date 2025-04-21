@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion'; // eslint-disable-line
+import { Link } from 'react-router-dom';
 
 const FaqItem = ({ question, answer }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -92,8 +93,9 @@ const FaqSection = () => {
           transition={{ delay: 0.5 }}
         >
           <p className="text-gray-600 mb-4">더 궁금한 점이 있으신가요?</p>
-          <a 
-            href="mailto:support@csmorning.co.kr" 
+          <button
+
+            onClick={() => window.open('http://pf.kakao.com/_Sxkswn', '_blank')}
             className="inline-flex items-center px-4 py-2 bg-blue-800 hover:bg-blue-900 text-white font-medium rounded-md transition-colors duration-200"
           >
             문의하기
@@ -101,7 +103,7 @@ const FaqSection = () => {
               <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
               <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
             </svg>
-          </a>
+          </button>
         </motion.div>
       </div>
     </section>
