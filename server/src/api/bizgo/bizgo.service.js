@@ -64,6 +64,11 @@ async function sendAlimTalk(phoneNumber, content, buttons = []) {
       ref: `CS_Morning_${Date.now()}`, // 참조 필드 (추적용)
     };
 
+    if (title) {
+      data.title = title;
+    }
+
+
     // 버튼이 있으면 추가
     if (buttons && buttons.length > 0) {
       data.button = buttons;
