@@ -45,5 +45,20 @@ router.post('/broadcast',
   bizgoController.sendAlimTalkToAll
 );
 
+// 테스트용 오늘의 질문 알림톡 발송
+router.post('/daily-question', 
+  isAuthenticated, 
+  isAdmin, 
+  validate(bizgoValidation.sendDailyQuestion), 
+  bizgoController.sendTestDailyQuestion
+);
+
+// 모든 구독자에게 오늘의 질문 알림톡 발송
+router.post('/broadcast-daily-question', 
+  isAuthenticated, 
+  isAdmin,
+  bizgoController.sendDailyQuestionToAll
+);
+
 
 module.exports = router;

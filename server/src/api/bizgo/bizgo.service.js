@@ -341,10 +341,194 @@ async function sendOmniMessage(phoneNumber, messageOptions) {
     throw error;
   }
 }
+
+/**
+ * 오늘의 질문으로 알림톡 전송
+ * @param {object} questionData - 오늘의 질문 데이터
+ * @param {string} phoneNumber - 수신자 전화번호 (01012345678 형식)
+ * @param {string} userName - 수신자 이름
+ * @returns {Promise<object>} 전송 결과
+ */
+async function sendDailyQuestionAlimTalk(questionData, phoneNumber, userName) {
+  try {
+    const accessToken = await getToken();
+    
+    // 질문 정보 추출
+    const question = questionData.question;
+    const category = question.category || '알고리즘';
+    const questionText = question.text || '오늘의 문제를 확인해보세요';
+    
+    // 옵션을 문자열로 변환
+    let optionsText = '';
+    if (question.options && Array.isArray(question.options)) {
+      optionsText = question.options.map((opt, idx) => `${idx+1}. ${opt}`).join(' ');
+    }
+    
+    // 알림톡 내용 구성 (템플릿 변수 치환)
+    const contentTemplate = "#{이름} 님 좋은 아침입니다😁\n\n오늘의 질문입니다\n\n#{카테고리}\n#{질문}\n\n#{옵션}\n\n오늘의 질문을 풀어보고 간단하게 문제를 맞춰보아요 !\n\n아침에 제일 먼저 확인하면 오늘 하루 중 첫 번째 기억이 되는거에요.\n\n오늘 하루도 파이팅 입니다 😎\n\n[안내] 해당 오늘의 질문 안내 메시지는 고객님께서 신청하신 구독으로, 매일 오전에 발송됩니다.";
+    
+    // 변수 치환
+    const content = contentTemplate
+      .replace('#{이름}', userName)
+      .replace('#{카테고리}', category)
+      .replace('#{질문}', questionText)
+      .replace('#{옵션}', '(오늘의 질문을 누르면 보기가 나와요 !)');
+    
+    // 통합메시지 요청 데이터 구성
+    const data = {
+      destinations: [
+        {
+          to: phoneNumber
+        }
+      ],
+      messageFlow: [
+        {
+          alimtalk: {
+            senderKey: SENDER_KEY,
+            msgType: 'AT',
+            templateCode: TEMPLATE_CODE,
+            text: content,
+            ref: `CS_Morning_${Date.now()}`,
+            attachment: {
+              button: [
+                {
+                  name: "챗봇으로 변환 !",
+                  type: "BT"
+                },
+                {
+                  name: "CSmorning 바로가기",
+                  type: "WL",
+                  urlMobile: "https://csmorning.co.kr",
+                  urlPc: "https://csmorning.co.kr"
+                }
+              ]
+            },
+            supplement: {
+              quickReply: [
+                {
+                  name: "오늘의 질문",
+                  type: "BK"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    };
+    
+    const response = await axios.post(`${BASE_URL}/v1/send/omni`, data, {
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      }
+    });
+    
+    if (response.data.code === 'A000') {
+      console.log(`오늘의 질문 알림톡 전송 성공: ${phoneNumber}`);
+      return {
+        success: true,
+        data: response.data.data,
+        ref: response.data.ref
+      };
+    } else {
+      throw new Error(`알림톡 전송 실패: ${response.data.result}`);
+    }
+  } catch (error) {
+    console.error('오늘의 질문 알림톡 전송 중 오류 발생:', error.message);
+    throw error;
+  }
+}
+
+/**
+ * 모든 구독자에게 오늘의 질문 알림톡 전송
+ * @returns {Promise<object>} 전송 결과
+ */
+async function sendDailyQuestionToAllSubscribers() {
+  try {
+    // 1. 오늘의 질문 데이터 가져오기
+    const response = await axios.get(`https://csmorning.co.kr/api/questions/today/question`);
+    if (!response.data.success || !response.data.data) {
+      throw new Error('오늘의 질문 데이터를 가져오는데 실패했습니다.');
+    }
+    
+    const questionData = response.data.data;
+    
+    // 2. 구독 중인 사용자 찾기
+    const subscribers = await prisma.user.findMany({
+      where: { 
+        isSubscribed: true,
+        phoneNumber: { not: null } // 전화번호가 있는 사용자만
+      }
+    });
+
+    if (subscribers.length === 0) {
+      return {
+        success: true,
+        message: '전화번호가 등록된 구독자가 없습니다.',
+        sentCount: 0
+      };
+    }
+
+    let sentCount = 0;
+    let failedCount = 0;
+    const resultDetails = [];
+
+    // 3. 각 구독자에게 메시지 전송
+    for (const user of subscribers) {
+      try {
+        if (user.phoneNumber) {
+          // 전화번호 형식 정리 (하이픈 제거)
+          const phoneNumber = user.phoneNumber.replace(/-/g, '');
+          const userName = user.name || '고객';
+          
+          // 알림톡 전송
+          const result = await sendDailyQuestionAlimTalk(questionData, phoneNumber, userName);
+          sentCount++;
+          resultDetails.push({
+            userId: user.id,
+            phoneNumber: phoneNumber,
+            success: true,
+            msgKey: result.data?.destinations?.[0]?.msgKey
+          });
+          
+          console.log(`사용자 ${user.id}(${phoneNumber})에게 오늘의 질문 알림톡 전송 성공`);
+        }
+        
+        // 너무 많은 요청을 한 번에 보내지 않도록 잠시 대기
+        await new Promise(resolve => setTimeout(resolve, 300));
+      } catch (error) {
+        console.error(`사용자 ${user.id}에게 오늘의 질문 알림톡 전송 실패:`, error.message);
+        failedCount++;
+        resultDetails.push({
+          userId: user.id,
+          phoneNumber: user.phoneNumber,
+          success: false,
+          error: error.message
+        });
+      }
+    }
+
+    return {
+      success: true,
+      message: `${sentCount}명의 사용자에게 오늘의 질문 알림톡을 전송했습니다.`,
+      totalSubscribers: subscribers.length,
+      sentCount,
+      failedCount,
+      details: resultDetails
+    };
+  } catch (error) {
+    console.error('전체 오늘의 질문 알림톡 전송 중 오류 발생:', error);
+    throw error;
+  }
+}
+
 module.exports = {
   getToken,
   sendAlimTalk,
   sendFriendTalk,
   sendAlimTalkToAllSubscribers,
-  sendOmniMessage
+  sendOmniMessage,
+  sendDailyQuestionAlimTalk,
+  sendDailyQuestionToAllSubscribers
 };

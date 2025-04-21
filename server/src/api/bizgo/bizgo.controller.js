@@ -107,10 +107,64 @@ async function sendTestOmniMessage(req, res, next) {
   }
 }
 
+/**
+ * 테스트용 오늘의 질문 알림톡 발송
+ */
+async function sendTestDailyQuestion(req, res, next) {
+  try {
+    const { phoneNumber, userName } = req.body;
+    
+    // 오늘의 질문 데이터 가져오기
+    const response = await axios.get(`https://csmorning.co.kr/api/questions/today/question`);
+    if (!response.data.success || !response.data.data) {
+      return res.status(404).json({
+        success: false,
+        message: '오늘의 질문 데이터가 없습니다.'
+      });
+    }
+    
+    const questionData = response.data.data;
+    
+    // 알림톡 전송
+    const result = await bizgoService.sendDailyQuestionAlimTalk(
+      questionData, 
+      phoneNumber, 
+      userName || '고객'
+    );
+    
+    return res.status(200).json({
+      success: true,
+      message: '오늘의 질문 알림톡이 성공적으로 전송되었습니다.',
+      data: result
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
+ * 모든 구독자에게 오늘의 질문 알림톡 발송
+ */
+async function sendDailyQuestionToAll(req, res, next) {
+  try {
+    const result = await bizgoService.sendDailyQuestionToAllSubscribers();
+    
+    return res.status(200).json({
+      success: true,
+      message: `${result.sentCount}명의 사용자에게 오늘의 질문 알림톡이 전송되었습니다.`,
+      data: result
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
 module.exports = {
   sendTestAlimTalk,
   sendTestFriendTalk,
   sendAlimTalkToAll,
   checkTokenStatus,
-  sendTestOmniMessage
+  sendTestOmniMessage,
+  sendTestDailyQuestion,
+  sendDailyQuestionToAll
 };
