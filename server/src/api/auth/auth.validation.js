@@ -72,8 +72,25 @@ const registerSchema = Joi.object({
   })
 });
 
+// 프리미엄 업데이트 요청 스키마
+const updatePremiumSchema = Joi.object({
+  isPremium: Joi.boolean().required().messages({
+    'boolean.base': '프리미엄 상태는 불리언 값이어야 합니다.',
+    'any.required': '프리미엄 상태를 지정해주세요.'
+  }),
+  premiumPlan: Joi.string().when('isPremium', {
+    is: true,
+    then: Joi.string().valid('1개월', '6개월', '12개월', '1년').required().messages({
+      'any.only': '유효한 프리미엄 플랜이 아닙니다.',
+      'any.required': '프리미엄 플랜을 선택해주세요.'
+    }),
+    otherwise: Joi.optional()
+  })
+});
+
 module.exports = {
   loginSchema,
   kakaoLoginSchema,
-  registerSchema
+  registerSchema,
+  updatePremiumSchema
 };

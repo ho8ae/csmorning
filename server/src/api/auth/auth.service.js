@@ -181,8 +181,64 @@ const processKakaoLogin = async (code) => {
   };
 };
 
+/**
+ * 사용자 프리미엄 상태 업데이트
+ * @param {number} userId - 사용자 ID
+ * @param {boolean} isPremium - 프리미엄 여부
+ * @param {string} premiumPlan - 프리미엄 플랜 (1개월, 6개월, 12개월)
+ * @returns {Promise<Object>} 업데이트된 사용자 정보
+ */
+const updateUserPremium = async (userId, isPremium, premiumPlan) => {
+  // 사용자 존재 여부 확인
+  const user = await prisma.user.findUnique({
+    where: { id: userId }
+  });
+  
+  if (!user) {
+    throw createError(404, '사용자를 찾을 수 없습니다.');
+  }
+  
+  // 프리미엄 종료 날짜 계산
+  let premiumUntil = null;
+  if (isPremium && premiumPlan) {
+    let months = 0;
+    switch (premiumPlan) {
+      case '1개월':
+        months = 1;
+        break;
+      case '6개월':
+        months = 6;
+        break;
+      case '12개월':
+      case '1년':
+        months = 12;
+        break;
+      default:
+        months = 1;
+    }
+    
+    premiumUntil = new Date();
+    premiumUntil.setMonth(premiumUntil.getMonth() + months);
+  }
+  
+  // 사용자 정보 업데이트
+  const updatedUser = await prisma.user.update({
+    where: { id: userId },
+    data: {
+      isPremium,
+      premiumUntil
+    }
+  });
+  
+  // 비밀번호 필드 제외하고 응답
+  const { password: _, ...userWithoutPassword } = updatedUser;
+  
+  return userWithoutPassword;
+};
+
 module.exports = {
   login,
   processKakaoLogin,
-  register
+  register,
+  updateUserPremium
 };

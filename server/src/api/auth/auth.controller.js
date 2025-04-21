@@ -157,6 +157,27 @@ const linkKakaoChannel = async (req, res) => {
   }
 };
 
+/**
+ * 사용자 프리미엄 상태 업데이트
+ */
+const updatePremium = async (req, res, next) => {
+  try {
+    const userId = req.user.id; // 현재 로그인한 사용자 ID
+    const { isPremium, premiumPlan } = req.body;
+    
+    // 프리미엄 상태 업데이트
+    const updatedUser = await authService.updateUserPremium(userId, isPremium, premiumPlan);
+    
+    return res.status(200).json({
+      success: true,
+      data: { user: updatedUser },
+      message: '프리미엄 상태가 업데이트되었습니다.'
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   login,
   kakaoLogin,
@@ -164,5 +185,6 @@ module.exports = {
   logout,
   redirectToFrontendCallback,
   linkKakaoChannel,
-  register
+  register,
+  updatePremium
 };

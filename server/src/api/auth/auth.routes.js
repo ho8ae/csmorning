@@ -26,4 +26,7 @@ router.get('/kakao/callback', authController.redirectToFrontendCallback);
 // 카카오 채널 연동
 router.post('/link-kakao-channel', isAuthenticated, authController.linkKakaoChannel);
 
+// 프리미엄 상태 업데이트
+router.post('/update-premium', isAuthenticated, validate(authValidation.updatePremiumSchema), authController.updatePremium);
+
 module.exports = router;
