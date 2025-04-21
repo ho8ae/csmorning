@@ -6,9 +6,9 @@ const bizgoService = require('./bizgo.service');
  */
 async function sendTestAlimTalk(req, res, next) {
   try {
-    const { phoneNumber, content, buttons, title, subtitle } = req.body;
+    const { phoneNumber, content, buttons, title, subtitle, quickReplies } = req.body;
     
-    const result = await bizgoService.sendAlimTalk(phoneNumber, content, buttons, title, subtitle);
+    const result = await bizgoService.sendAlimTalk(phoneNumber, content, buttons, title, subtitle, quickReplies);
     
     return res.status(200).json({
       success: true,

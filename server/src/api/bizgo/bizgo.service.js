@@ -54,7 +54,7 @@ async function getToken() {
  * @param {string} subtitle - 강조표기 보조문구 (선택)
  * @returns {Promise<object>} 전송 결과
  */
-async function sendAlimTalk(phoneNumber, content, buttons = [], title = null, subtitle = null) {
+async function sendAlimTalk(phoneNumber, content, buttons = [], title = null, subtitle = null, quickReplies = []) {
   try {
     const accessToken = await getToken();
 
@@ -72,13 +72,20 @@ async function sendAlimTalk(phoneNumber, content, buttons = [], title = null, su
     }
 
     if (subtitle) {
-      data.subtitle = subtitle; // 또는 API 문서에 맞는 필드명 사용
+      data.subtitle = subtitle;
     }
-    
+
     // 버튼이 있으면 추가
     if (buttons && buttons.length > 0) {
       data.button = buttons;
     }
+
+    // 퀵 리플라이가 있으면 추가
+    if (quickReplies && quickReplies.length > 0) {
+      data.quickReplies = quickReplies;
+    }
+
+
 
     // // 실패 시 SMS로 전환 설정 (옵션)
     // data.fallback = {
@@ -100,7 +107,8 @@ async function sendAlimTalk(phoneNumber, content, buttons = [], title = null, su
       return {
         success: true,
         msgKey: response.data.msgKey,
-        ref: response.data.ref
+        ref: response.data.ref,
+        data: response.data
       };
     } else {
       throw new Error(`알림톡 전송 실패: ${response.data.result}`);
@@ -172,7 +180,7 @@ async function sendFriendTalk(phoneNumber, content, buttons = []) {
  * @param {object} buttons - 버튼 정보 (선택)
  * @returns {Promise<object>} 전송 결과
  */
-async function sendAlimTalkToAllSubscribers(content, buttons = [], title = null, subtitle = null) {
+async function sendAlimTalkToAllSubscribers(content, buttons = [], title = null, subtitle = null, quickReplies = []) {
   try {
     // 구독 중인 사용자 찾기
     const subscribers = await prisma.user.findMany({
@@ -202,7 +210,7 @@ async function sendAlimTalkToAllSubscribers(content, buttons = [], title = null,
           const phoneNumber = user.phoneNumber.replace(/-/g, '');
           
           // 알림톡 전송
-          const result = await sendAlimTalk(phoneNumber, content, buttons, title, subtitle);
+          const result = await sendAlimTalk(phoneNumber, content, buttons, title, subtitle, quickReplies);
   
           sentCount++;
           resultDetails.push({
