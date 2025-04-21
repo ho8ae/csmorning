@@ -73,7 +73,7 @@ async function sendAlimTalk(phoneNumber, content, buttons = []) {
     data.fallback = {
       type: 'SMS',
       from: process.env.BIZGO_FALLBACK_SENDER || '0316281500', // SMS 발신번호
-      text: content.substring(0, 90) // SMS 내용 (90자 제한)
+      text: 'CS Morning 입니다(오늘의 질문을 눌러주세요)!'  // SMS 내용 (30자 제한)
     };
 
     const response = await axios.post(`${BASE_URL}/v1/send/alimtalk`, data, {
