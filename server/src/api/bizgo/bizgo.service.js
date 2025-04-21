@@ -44,14 +44,17 @@ async function getToken() {
   return token;
 }
 
-/**
+
+javascript/**
  * 알림톡 전송
  * @param {string} phoneNumber - 수신자 전화번호 (01012345678 형식)
  * @param {string} content - 알림톡 내용
  * @param {object} buttons - 버튼 정보
+ * @param {string} title - 강조표기 타이틀 (선택)
+ * @param {string} subtitle - 강조표기 보조문구 (선택)
  * @returns {Promise<object>} 전송 결과
  */
-async function sendAlimTalk(phoneNumber, content, buttons = []) {
+async function sendAlimTalk(phoneNumber, content, buttons = [], title = null, subtitle = null) {
   try {
     const accessToken = await getToken();
 
@@ -71,8 +74,7 @@ async function sendAlimTalk(phoneNumber, content, buttons = []) {
     if (subtitle) {
       data.subtitle = subtitle; // 또는 API 문서에 맞는 필드명 사용
     }
-
-
+    
     // 버튼이 있으면 추가
     if (buttons && buttons.length > 0) {
       data.button = buttons;
@@ -170,7 +172,7 @@ async function sendFriendTalk(phoneNumber, content, buttons = []) {
  * @param {object} buttons - 버튼 정보 (선택)
  * @returns {Promise<object>} 전송 결과
  */
-async function sendAlimTalkToAllSubscribers(content, buttons = []) {
+async function sendAlimTalkToAllSubscribers(content, buttons = [], title = null, subtitle = null) {
   try {
     // 구독 중인 사용자 찾기
     const subscribers = await prisma.user.findMany({
@@ -200,7 +202,8 @@ async function sendAlimTalkToAllSubscribers(content, buttons = []) {
           const phoneNumber = user.phoneNumber.replace(/-/g, '');
           
           // 알림톡 전송
-          const result = await sendAlimTalk(phoneNumber, content, buttons);
+          const result = await sendAlimTalk(phoneNumber, content, buttons, title, subtitle);
+  
           sentCount++;
           resultDetails.push({
             userId: user.id,

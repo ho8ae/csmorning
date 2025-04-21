@@ -44,9 +44,9 @@ async function sendTestFriendTalk(req, res, next) {
  */
 async function sendAlimTalkToAll(req, res, next) {
   try {
-    const { content, buttons } = req.body;
+    const { content, buttons, title, subtitle } = req.body;
     
-    const result = await bizgoService.sendAlimTalkToAllSubscribers(content, buttons);
+    const result = await bizgoService.sendAlimTalkToAllSubscribers(content, buttons, title, subtitle);
     
     return res.status(200).json({
       success: true,
