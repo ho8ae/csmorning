@@ -1,7 +1,6 @@
 // src/api/bizgo/bizgo.validation.js
 const Joi = require('joi');
 
-// 알림톡 전송 유효성 검사
 const sendAlimTalk = Joi.object({
   phoneNumber: Joi.string().pattern(/^01[0-9]{8,9}$/).required().messages({
     'string.pattern.base': '전화번호는 01로 시작하는 10-11자리 숫자여야 합니다. (예: 01012345678)',
@@ -11,6 +10,8 @@ const sendAlimTalk = Joi.object({
     'string.empty': '내용을 입력해주세요.',
     'any.required': '내용은 필수 입력 항목입니다.'
   }),
+  title: Joi.string().optional(),
+  subtitle: Joi.string().optional(),
   buttons: Joi.array().items(
     Joi.object({
       name: Joi.string().required(),
@@ -59,6 +60,8 @@ const broadcastMessage = Joi.object({
     })
   ).max(5).optional()
 });
+
+
 
 module.exports = {
   sendAlimTalk,
