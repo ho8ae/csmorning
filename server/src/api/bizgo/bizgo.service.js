@@ -45,7 +45,7 @@ async function getToken() {
 }
 
 
-javascript/**
+/**
  * 알림톡 전송
  * @param {string} phoneNumber - 수신자 전화번호 (01012345678 형식)
  * @param {string} content - 알림톡 내용
