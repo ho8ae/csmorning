@@ -20,6 +20,7 @@ const QuestionCard = ({
         <h2 className="mb-6 text-2xl text-center text-blue-900 font-['chosunGu']">
           오늘의 CS 문제
         </h2>
+        
         <div className="p-4 text-center text-gray-500">
           오늘의 질문이 없습니다. 다음에 다시 시도해주세요.
         </div>
@@ -65,10 +66,11 @@ const QuestionCard = ({
       transition={{ duration: 0.5, delay: 0.4 }}
       className="p-6 mx-auto mb-8 bg-white rounded-lg shadow-md max-w-3xl"
     >
-      <h2 className="mb-6 text-2xl font-bold text-center text-blue-900 ">
-        오늘의 CS 문제
+      <h2 className="text-2xl font-bold text-center text-blue-900 ">
+        오늘의 질문
       </h2>
-
+      <p className='text-center font-["ChosunGu"] mb-4 text-gray-700'>매일 CS Morning 채널에서 '오늘의 질문' 입력하면 받으실 수 있어요 !</p>
+      
       <div className="p-4 mb-4 bg-blue-50 rounded-lg">
         <p className="text-lg font-medium text-blue-800 ">
           {todayQuestion.question.text}

@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion'; // eslint-disable-line no-unused-vars
+import { Link } from 'react-router-dom';
 
 const Hero = () => {
   return (
@@ -39,9 +40,9 @@ const Hero = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.6, duration: 0.8 }}
           >
-            <button className="bg-yellow-400 hover:bg-yellow-500 text-blue-900 font-bold py-3 px-8 rounded-full shadow-lg transition duration-300 transform hover:scale-105 font-['ChosunGu'] ">
-              8시 아침 CS 지식 습득하기
-            </button>
+            <Link to={'/login'}  className="bg-yellow-400 hover:bg-yellow-500 text-blue-900 font-bold py-3 px-8 rounded-full shadow-lg transition duration-300 transform hover:scale-105 font-['ChosunGu'] ">
+              시작하기
+            </Link>
           </motion.div>
         </motion.div>
       </div>
