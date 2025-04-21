@@ -129,7 +129,7 @@ async function sendTestDailyQuestion(req, res, next) {
     const result = await bizgoService.sendDailyQuestionAlimTalk(
       questionData, 
       phoneNumber, 
-      userName || '고객'
+      nincName || '고객'
     );
     
     return res.status(200).json({

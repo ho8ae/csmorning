@@ -502,7 +502,7 @@ async function sendDailyQuestionToAllSubscribers(prisma) {
         if (user.phoneNumber) {
           // 전화번호 형식 정리 (하이픈 제거)
           const phoneNumber = user.phoneNumber.replace(/-/g, '');
-          const userName = user.name || '고객';
+          const userName = user.nickname || '고객';
 
           // 알림톡 전송
           const result = await sendDailyQuestionAlimTalk(
