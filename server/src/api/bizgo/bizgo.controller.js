@@ -78,9 +78,39 @@ async function checkTokenStatus(req, res, next) {
   }
 }
 
+/**
+ * 테스트용 통합메시지 알림톡 발송
+ */
+async function sendTestOmniMessage(req, res, next) {
+  try {
+    const { phoneNumber, content, buttons, title, subtitle, quickReplies, enableFallback, fallbackText } = req.body;
+    
+    const messageOptions = {
+      content,
+      buttons,
+      title,
+      subtitle,
+      quickReplies,
+      enableFallback,
+      fallbackText
+    };
+    
+    const result = await bizgoService.sendOmniMessage(phoneNumber, messageOptions);
+    
+    return res.status(200).json({
+      success: true,
+      message: '통합메시지가 성공적으로 전송되었습니다.',
+      data: result
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
 module.exports = {
   sendTestAlimTalk,
   sendTestFriendTalk,
   sendAlimTalkToAll,
-  checkTokenStatus
+  checkTokenStatus,
+  sendTestOmniMessage
 };

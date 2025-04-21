@@ -108,7 +108,7 @@ async function sendAlimTalk(phoneNumber, content, buttons = [], title = null, su
         success: true,
         msgKey: response.data.msgKey,
         ref: response.data.ref,
-        data: response.data
+        
       };
     } else {
       throw new Error(`알림톡 전송 실패: ${response.data.result}`);
@@ -251,9 +251,100 @@ async function sendAlimTalkToAllSubscribers(content, buttons = [], title = null,
   }
 }
 
+
+/**
+ * 통합메시지 알림톡 전송
+ * @param {string} phoneNumber - 수신자 전화번호 (01012345678 형식)
+ * @param {object} messageOptions - 메시지 옵션 (내용, 버튼, 타이틀 등)
+ * @returns {Promise<object>} 전송 결과
+ */
+async function sendOmniMessage(phoneNumber, messageOptions) {
+  try {
+    const accessToken = await getToken();
+    
+    // 통합메시지 요청 데이터 구성
+    const data = {
+      destinations: [
+        {
+          to: phoneNumber
+        }
+      ],
+      messageFlow: [
+        {
+          alimtalk: {
+            senderKey: SENDER_KEY,
+            msgType: messageOptions.msgType || 'AT',
+            templateCode: TEMPLATE_CODE,
+            text: messageOptions.content,
+            ref: `CS_Morning_${Date.now()}`,
+          }
+        }
+      ]
+    };
+    
+    // 타이틀 추가 (강조표기형 템플릿용)
+    if (messageOptions.title) {
+      data.messageFlow[0].alimtalk.title = messageOptions.title;
+    }
+    
+    // 서브타이틀/헤더 추가
+    if (messageOptions.subtitle) {
+      data.messageFlow[0].alimtalk.header = messageOptions.subtitle;
+    }
+    
+    // 버튼 추가
+    if (messageOptions.buttons && messageOptions.buttons.length > 0) {
+      if (!data.messageFlow[0].alimtalk.attachment) {
+        data.messageFlow[0].alimtalk.attachment = {};
+      }
+      data.messageFlow[0].alimtalk.attachment.button = messageOptions.buttons;
+    }
+    
+    // 퀵 리플라이 추가
+    if (messageOptions.quickReplies && messageOptions.quickReplies.length > 0) {
+      if (!data.messageFlow[0].alimtalk.supplement) {
+        data.messageFlow[0].alimtalk.supplement = {};
+      }
+      data.messageFlow[0].alimtalk.supplement.quickReply = messageOptions.quickReplies;
+    }
+    
+    // Fallback SMS 설정 (옵션)
+    if (messageOptions.enableFallback) {
+      data.messageFlow.push({
+        sms: {
+          from: process.env.BIZGO_FALLBACK_SENDER,
+          text: messageOptions.fallbackText || messageOptions.content.substring(0, 80) + "..."
+        }
+      });
+    }
+    
+    const response = await axios.post(`${BASE_URL}/v1/send/omni`, data, {
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      }
+    });
+    
+    if (response.data.code === 'A000') {
+      console.log(`통합메시지 전송 성공: ${phoneNumber}`);
+      return {
+        success: true,
+        data: response.data.data,
+        ref: response.data.ref
+      };
+    } else {
+      throw new Error(`통합메시지 전송 실패: ${response.data.result}`);
+    }
+  } catch (error) {
+    console.error('통합메시지 전송 중 오류 발생:', error.message);
+    throw error;
+  }
+}
 module.exports = {
   getToken,
   sendAlimTalk,
   sendFriendTalk,
-  sendAlimTalkToAllSubscribers
+  sendAlimTalkToAllSubscribers,
+  sendOmniMessage
 };

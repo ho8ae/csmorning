@@ -29,6 +29,14 @@ router.post('/friendtalk',
   bizgoController.sendTestFriendTalk
 );
 
+// 테스트용 통합메시지 알림톡 발송
+router.post('/omni', 
+  isAuthenticated, 
+  isAdmin,
+  validate(bizgoValidation.sendOmniMessage),
+  bizgoController.sendTestOmniMessage
+);
+
 // 모든 구독자에게 알림톡 발송
 router.post('/broadcast', 
   isAuthenticated, 
@@ -36,5 +44,6 @@ router.post('/broadcast',
   validate(bizgoValidation.broadcastMessage), 
   bizgoController.sendAlimTalkToAll
 );
+
 
 module.exports = router;
