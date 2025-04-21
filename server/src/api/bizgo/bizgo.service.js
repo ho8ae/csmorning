@@ -68,6 +68,10 @@ async function sendAlimTalk(phoneNumber, content, buttons = []) {
       data.title = title;
     }
 
+    if (subtitle) {
+      data.subtitle = subtitle; // 또는 API 문서에 맞는 필드명 사용
+    }
+
 
     // 버튼이 있으면 추가
     if (buttons && buttons.length > 0) {
