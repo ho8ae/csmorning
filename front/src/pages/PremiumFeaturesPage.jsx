@@ -17,7 +17,7 @@ const PremiumFeaturesPage = () => {
       
       <main>
         {/* Hero Section */}
-        <section className="py-16 bg-gradient-to-b from-blue-900 to-blue-800 text-white">
+        <section className="py-16 bg-gradient-to-b from-blue-900 to-blue-500 text-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center">
               <motion.h1 

@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'; // eslint-disable-line
 import Navbar from '../components/common/Navbar';
 import Footer from '../components/landing/Footer';
 import useAuthStore from '../store/authStore';
+import { authAPI } from '../services/api';
 
 const CheckoutPage = () => {
   const navigate = useNavigate();
@@ -28,8 +29,8 @@ const CheckoutPage = () => {
       // Default plan if none provided
       setPlan({
         period: '6개월',
-        price: '29,900',
-        originalPrice: '35,400',
+        price: '0',
+        originalPrice: '0',
         discount: '15%',
         features: [
           '모든 프리미엄 기능 이용',
@@ -56,7 +57,7 @@ const CheckoutPage = () => {
     return Object.values(agreed).every(value => value === true);
   };
 
-  const handleCheckout = (e) => {
+  const handleCheckout = async (e) => {
     e.preventDefault();
     
     if (!isAllAgreed()) {
@@ -64,17 +65,28 @@ const CheckoutPage = () => {
       return;
     }
     
-    // 실제 구현 시 여기에 카카오페이 API 호출 로직이 들어갑니다
-    // 현재는 결제 성공 페이지로 바로 이동
-    
-    navigate('/payment-success', {
-      state: {
-        plan: plan,
-        paymentMethod: paymentMethod,
-        orderDate: new Date().toISOString(),
-        orderId: 'ORDER-' + Math.random().toString(36).substr(2, 9).toUpperCase()
-      }
-    });
+    try {
+      // API를 통해 프리미엄 상태 업데이트
+      // 지금은 결제 처리가 바로 TEST로 진행되지만,
+      // 실제 결제 API를 호출하여 결제를 처리해야 합니다.
+      const result = await authAPI.updatePremium(true, plan.period);
+      
+      // 업데이트된 사용자 정보로 상태 갱신
+      useAuthStore.setState({ user: result.user });
+      
+      // 결제 성공 페이지로 이동
+      navigate('/payment-success', {
+        state: {
+          plan: plan,
+          paymentMethod: paymentMethod,
+          orderDate: new Date().toISOString(),
+          orderId: 'ORDER-' + Math.random().toString(36).substr(2, 9).toUpperCase()
+        }
+      });
+    } catch (error) {
+      console.error('프리미엄 업데이트 오류:', error);
+      alert('결제 처리 중 오류가 발생했습니다. 다시 시도해주세요.');
+    }
   };
 
   if (!plan || !user) {
@@ -130,7 +142,7 @@ const CheckoutPage = () => {
               <div className="bg-gray-50 p-4 rounded-lg">
                 <div className="flex justify-between items-center mb-2">
                   <span className="font-medium">CS Morning 프리미엄 {plan.period} 구독</span>
-                  <span className="font-bold text-blue-900">{plan.price}원</span>
+                  <span className="font-bold text-blue-900"><span className='line-through text-blue-100'>{plan.price}</span>0원</span>
                 </div>
                 {plan.discount && (
                   <div className="text-sm text-gray-600 mb-2">
@@ -201,7 +213,7 @@ const CheckoutPage = () => {
               <div className="bg-blue-50 p-4 rounded-lg">
                 <div className="flex justify-between items-center">
                   <span className="font-medium">총 결제 금액</span>
-                  <span className="text-xl font-bold text-blue-900">{plan.price}원</span>
+                  <span className="text-xl font-bold text-blue-900"><span className='line-through text-blue-100'>{plan.price}</span>0원</span>
                 </div>
                 <div className="mt-2 text-sm text-gray-600">
                   <p>• 구독 기간: {plan.period}</p>
@@ -294,7 +306,7 @@ const CheckoutPage = () => {
                     : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                 }`}
               >
-                {plan.price}원 결제하기
+                <span className='line-through text-blue-100'>{plan.price}</span> 0원 결제하기
               </button>
               
               <p className="mt-4 text-center text-sm text-gray-600">

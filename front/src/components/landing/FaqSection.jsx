@@ -94,7 +94,6 @@ const FaqSection = () => {
         >
           <p className="text-gray-600 mb-4">더 궁금한 점이 있으신가요?</p>
           <button
-
             onClick={() => window.open('http://pf.kakao.com/_Sxkswn', '_blank')}
             className="inline-flex items-center px-4 py-2 bg-blue-800 hover:bg-blue-900 text-white font-medium rounded-md transition-colors duration-200"
           >

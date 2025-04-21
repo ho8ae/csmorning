@@ -86,6 +86,15 @@ export const authAPI = {
     const response = await apiClient.get('/auth/me');
     return response.data.data;
   },
+
+  // 프리미엄 상태 업데이트
+  updatePremium: async (isPremium, premiumPlan) => {
+    const response = await apiClient.post('/auth/update-premium', {
+      isPremium,
+      premiumPlan
+    });
+    return response.data.data;
+  }
 };
 
 // 질문 관련 API

@@ -60,13 +60,13 @@ const PremiumWidget = ({ title, size = "md", children }) => {
               d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" 
             />
           </svg>
-          <p className="text-center text-gray-700 font-medium font-['ChosunGu'] ">이 기능은 프리미엄 회원만 이용할 수 있습니다.</p>
-          <p className="text-gray-600 text-sm font-['ChosunGu']">(현재는 누구나 가능해요!! 더욱 개선 될 예정 입니다.)</p>
+          <p className="text-center text-gray-700 font-medium font-['ChosunGu'] ">이 기능은 아직 테스트 중 입니다.</p>
+          <p className="text-gray-600 text-sm font-['ChosunGu']">(🔥더욱 개선 될 예정 입니다🔥)</p>
           <Link 
             to="/premium-features" 
             className="mt-3 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
           >
-            프리미엄 맛보기
+            테스트 몰래 맛보기
           </Link>
         </div>
       )}

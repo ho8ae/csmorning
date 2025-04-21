@@ -44,7 +44,7 @@ const PaymentSuccessPage = () => {
                 <div className="text-gray-600">구독 기간</div>
                 <div className="font-medium">6개월</div>
                 <div className="text-gray-600">결제 금액</div>
-                <div className="font-medium">29,900원</div>
+                <div className="font-medium">0원</div>
               </div>
             </div>
             

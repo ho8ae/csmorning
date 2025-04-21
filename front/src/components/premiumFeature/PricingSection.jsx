@@ -6,7 +6,7 @@ const PricingSection = () => {
   const pricingPlans = [
     {
       period: '1개월',
-      price: '5,900',
+      price: '2,900',
       features: [
         '모든 프리미엄 기능 이용',
         '출석 잔디 기능',
@@ -17,7 +17,7 @@ const PricingSection = () => {
     },
     {
       period: '6개월',
-      price: '29,900',
+      price: '2,900',
       features: [
         '모든 프리미엄 기능 이용',
         '출석 잔디 기능',
@@ -30,7 +30,7 @@ const PricingSection = () => {
     },
     {
       period: '12개월',
-      price: '53,900',
+      price: '2,900',
       features: [
         '모든 프리미엄 기능 이용',
         '출석 잔디 기능',

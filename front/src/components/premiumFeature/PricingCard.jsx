@@ -10,8 +10,8 @@ const PricingCard = ({ period, price, features, recommended }) => {
       period,
       price,
       features,
-      originalPrice: period === '1개월' ? '5,900' : 
-                     period === '6개월' ? '35,400' : '70,800',
+      originalPrice: period === '1개월' ? '2,900' : 
+                     period === '6개월' ? '2,900' : '2,900',
       discount: period === '1개월' ? null : 
                 period === '6개월' ? '15%' : '25%'
     };
@@ -33,8 +33,8 @@ const PricingCard = ({ period, price, features, recommended }) => {
       
       <h3 className="text-xl font-bold text-blue-900 mb-2">{period}</h3>
       <div className="flex items-baseline mb-4">
-        <span className="text-3xl font-bold text-blue-900">{price}</span>
-        <span className="text-gray-500 ml-1">원</span>
+        <span className="text-3xl font-bold text-blue-900"> 0 </span>
+        <span className="text-gray-500 ml-1"><span className='line-through'>{price}</span>원</span>
       </div>
       
       <ul className="mb-6 space-y-2">

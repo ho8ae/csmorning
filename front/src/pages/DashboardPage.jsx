@@ -39,7 +39,7 @@ const DashboardPage = () => {
       try {
         setIsLoading(true);
         const response = await questionsAPI.getTodayQuestion();
-        console.log('오늘의 질문:', response);
+        
         setTodayQuestion(response);
         
         // 사용자 통계 설정
