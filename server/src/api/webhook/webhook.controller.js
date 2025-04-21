@@ -37,6 +37,28 @@ const handleKakaoMessage = async (req, res, next) => {
 
     // 메시지 내용에 따른 처리
     let responseText = '';
+    let quickReplies = [
+      {
+        label: '오늘의 질문',
+        action: 'message',
+        messageText: '오늘의 질문',
+      },
+      {
+        label: '구독하기',
+        action: 'message',
+        messageText: '구독',
+      },
+      {
+        label: '도움말',
+        action: 'message',
+        messageText: '도움말',
+      },
+      {
+        label: '계정 연동',
+        action: 'message',
+        messageText: '계정 연동',
+      },
+    ];
 
     if (
       utterance.includes('안녕') ||
@@ -71,12 +93,29 @@ const handleKakaoMessage = async (req, res, next) => {
           optionsArray.forEach((option, index) => {
             options += `${index + 1}. ${option}\n`;
           });
+          
+          // 선택지 수에 맞게 퀵 리플라이 버튼 생성
+          quickReplies = [];
+          for (let i = 0; i < optionsArray.length; i++) {
+            quickReplies.push({
+              label: `${i + 1}번`,
+              action: 'message',
+              messageText: `${i + 1}`,
+            });
+          }
+          
+          // 기존 메뉴도 추가
+          quickReplies.push({
+            label: '도움말',
+            action: 'message',
+            messageText: '도움말',
+          });
         } else {
           console.log('Parsed question options is not an array:', optionsArray);
           options = '선택지 형식이 올바르지 않습니다.';
         }
 
-        responseText = `[오늘의 CS 질문😎]\n\n카테고리: ${question.category}\n난이도: ${question.difficulty}\n\n${question.text}\n\n${options}\n\n답변은 번호로 입력해주세요 (예: 1)`;
+        responseText = `[오늘의 CS 질문😎]\n\n카테고리: ${question.category}\n난이도: ${question.difficulty}\n\n${question.text}\n\n${options}\n\n답변은 번호로 입력해주세요 (예: 1) [안내] 계정 연동을 해야 기록이 됩니다\n '안녕'을 입력하면 처음으로 돌아갑니다`;
       }
     } else if (/^[1-9]\d*$/.test(utterance.trim())) {
       // 숫자 응답 처리
@@ -133,9 +172,16 @@ const handleKakaoMessage = async (req, res, next) => {
               correctOptionIndex + 1
             }번입니다.\n\n[설명]\n${todayQuestion.question.explanation}`;
           }
+          
+          // 퀵 리플라이에 '다음 질문' 버튼 추가
+          quickReplies.unshift({
+            label: '다음 질문',
+            action: 'message',
+            messageText: '오늘의 질문',
+          });
         }
       }
-    }else if (utterance.includes('계정 연동')) {
+    } else if (utterance.includes('계정 연동')) {
       try {
         // 카카오 채널 ID 추출
         const kakaoChannelId = userRequest.user.id;
@@ -167,7 +213,7 @@ const handleKakaoMessage = async (req, res, next) => {
                     buttons: [
                       {
                         action: "webLink",
-                        label: "CS Morning 웹사이트",
+                        label: "CSMorning 웹사이트",
                         webLinkUrl: "https://csmorning.co.kr"
                       }
                     ]
@@ -214,7 +260,7 @@ const handleKakaoMessage = async (req, res, next) => {
                       },
                       {
                         action: "webLink",
-                        label: "CS Morning 웹사이트",
+                        label: "CSMorning 웹사이트",
                         webLinkUrl: "https://csmorning.co.kr"
                       }
                     ]
@@ -253,7 +299,7 @@ const handleKakaoMessage = async (req, res, next) => {
           },
         });
       }
-    }else if (utterance.includes('구독')) {
+    } else if (utterance.includes('구독')) {
       if (utterance.includes('취소') || utterance.includes('해지')) {
         await req.prisma.user.update({
           where: { id: user.id },
@@ -285,28 +331,7 @@ const handleKakaoMessage = async (req, res, next) => {
             },
           },
         ],
-        quickReplies: [
-          {
-            label: '오늘의 질문',
-            action: 'message',
-            messageText: '오늘의 질문',
-          },
-          {
-            label: '구독하기',
-            action: 'message',
-            messageText: '구독',
-          },
-          {
-            label: '도움말',
-            action: 'message',
-            messageText: '도움말',
-          },
-          {
-            label: '계정 연동',
-            action: 'message',
-            messageText: '계정 연동',
-          },
-        ],
+        quickReplies: quickReplies,
       },
     };
 
