@@ -115,7 +115,7 @@ const handleKakaoMessage = async (req, res, next) => {
           options = '선택지 형식이 올바르지 않습니다.';
         }
 
-        responseText = `[오늘의 CS 질문😎]\n\n카테고리: ${question.category}\n난이도: ${question.difficulty}\n\n${question.text}\n\n${options}\n\n답변은 번호로 입력해주세요 (예: 1) [안내] 계정 연동을 해야 기록이 됩니다\n '안녕'을 입력하면 처음으로 돌아갑니다`;
+        responseText = `[오늘의 CS 질문😎]\n\n카테고리: ${question.category}\n난이도: ${question.difficulty}\n\n${question.text}\n\n${options}\n\n답변은 번호로 입력해주세요 (예: 1) \n\n[안내] 계정 연동을 해야 기록이 됩니다\n'안녕'을 입력하면 처음으로 돌아갑니다`;
       }
     } else if (/^[1-9]\d*$/.test(utterance.trim())) {
       // 숫자 응답 처리
