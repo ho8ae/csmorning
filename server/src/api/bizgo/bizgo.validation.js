@@ -17,6 +17,7 @@ const sendAlimTalk = Joi.object({
       name: Joi.string().required(),
       type: Joi.string().valid('WL', 'AL', 'DS', 'BK', 'MD', 'BC', 'BT', 'AC', 'POLL').required(),
       urlMobile: Joi.string().when('type', { is: 'WL', then: Joi.required(), otherwise: Joi.optional() }),
+      urlPc: Joi.string().when('type', { is: 'WL', then: Joi.optional(), otherwise: Joi.optional() }),
       url: Joi.string().optional(),
       phoneNumber: Joi.string().when('type', { is: 'AL', then: Joi.required(), otherwise: Joi.optional() })
     })
