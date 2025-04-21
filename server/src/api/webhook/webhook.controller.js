@@ -175,7 +175,7 @@ const handleKakaoMessage = async (req, res, next) => {
           
           // 퀵 리플라이에 '다음 질문' 버튼 추가
           quickReplies.unshift({
-            label: '다음 질문',
+            label: '다음 질문(아직 X)',
             action: 'message',
             messageText: '오늘의 질문',
           });

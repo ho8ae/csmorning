@@ -11,7 +11,7 @@ function Navbar() {
         <div className="pl-2 md:pl-4">
           <Link
             to="/"
-            className="text-[20px] md:text-xl font-semibold text-white font-['SBAggroB']"
+            className="text-[18px] md:text-xl font-semibold text-white font-['SBAggroB']"
           >
             <span className="text-yellow-400">CS</span> Morning{' '}
             {user?.role === 'admin' ? 'Admin' : ''}
@@ -21,7 +21,7 @@ function Navbar() {
         <div className="flex items-center pr-2 md:pr-4">
           {user && (
             <>
-              <span className="mr-4 text-[16px] md:text-xl text-white font-['ChosunGu']">
+              <span className="mr-4 text-[12px] md:text-xl text-white font-['ChosunGu']">
                 안녕하세요? {user?.role === 'admin' ? 'admin' : user.nickname} 님
               </span>
               <button
