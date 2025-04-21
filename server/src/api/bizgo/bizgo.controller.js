@@ -114,16 +114,16 @@ async function sendTestDailyQuestion(req, res, next) {
   try {
     const { phoneNumber, userName } = req.body;
     
-    // 오늘의 질문 데이터 가져오기
-    const response = await axios.get(`https://csmorning.co.kr/api/questions/today/question`);
-    if (!response.data.success || !response.data.data) {
+    // 오늘의 질문 데이터를 직접 데이터베이스에서 가져오기
+    const questionService = require('../question/question.service');
+    const questionData = await questionService.getTodayQuestion(req.prisma);
+    
+    if (!questionData) {
       return res.status(404).json({
         success: false,
         message: '오늘의 질문 데이터가 없습니다.'
       });
     }
-    
-    const questionData = response.data.data;
     
     // 알림톡 전송
     const result = await bizgoService.sendDailyQuestionAlimTalk(
@@ -147,7 +147,7 @@ async function sendTestDailyQuestion(req, res, next) {
  */
 async function sendDailyQuestionToAll(req, res, next) {
   try {
-    const result = await bizgoService.sendDailyQuestionToAllSubscribers();
+    const result = await bizgoService.sendDailyQuestionToAllSubscribers(req.prisma);
     
     return res.status(200).json({
       success: true,
