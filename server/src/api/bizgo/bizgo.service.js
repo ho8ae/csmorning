@@ -69,12 +69,12 @@ async function sendAlimTalk(phoneNumber, content, buttons = []) {
       data.button = buttons;
     }
 
-    // 실패 시 SMS로 전환 설정 (옵션)
-    data.fallback = {
-      type: 'SMS',
-      from: process.env.BIZGO_FALLBACK_SENDER, // SMS 발신번호
-      text: 'CS Morning 입니다(오늘의 질문을 눌러주세요)!'  // SMS 내용 (30자 제한)
-    };
+    // // 실패 시 SMS로 전환 설정 (옵션)
+    // data.fallback = {
+    //   type: 'SMS',
+    //   from: process.env.BIZGO_FALLBACK_SENDER, // SMS 발신번호
+    //   text: 'CS Morning 입니다(오늘의 질문을 눌러주세요)!'  // SMS 내용 (30자 제한)
+    // };
 
     const response = await axios.post(`${BASE_URL}/v1/send/alimtalk`, data, {
       headers: {
@@ -125,11 +125,11 @@ async function sendFriendTalk(phoneNumber, content, buttons = []) {
     }
 
     // 실패 시 SMS로 전환 설정 (옵션)
-    data.fallback = {
-      type: 'SMS',
-      from: process.env.BIZGO_FALLBACK_SENDER, // SMS 발신번호
-      text: '안녕하세요 CS Morning 입니다.(오늘의 질문을 확인해주세요)' // SMS 내용 (90자 제한)
-    };
+    // data.fallback = {
+    //   type: 'SMS',
+    //   from: process.env.BIZGO_FALLBACK_SENDER, // SMS 발신번호
+    //   text: '안녕하세요 CS Morning 입니다.(오늘의 질문을 확인해주세요)' // SMS 내용 (90자 제한)
+    // };
 
     const response = await axios.post(`${BASE_URL}/v1/send/friendtalk`, data, {
       headers: {
