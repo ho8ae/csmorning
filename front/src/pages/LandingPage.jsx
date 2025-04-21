@@ -6,6 +6,7 @@ import HowItWorks from '../components/landing/HowItWorks';
 import Testimonials from '../components/landing/TestImonials';
 import CTA from '../components/landing/CTA';
 import Footer from '../components/landing/Footer';
+import FaqSection from '../components/landing/FaqSection';
 
 const LandingPage = () => {
   // 스크롤 시 부드러운 전환 효과를 위한 설정
@@ -45,13 +46,20 @@ const LandingPage = () => {
           <HowItWorks />
         </section>
         
+        <section id="faq">
+          <FaqSection />
+        </section>
+
         <section id="testimonials">
           <Testimonials />
         </section>
+
+   
         
         <section id="contact">
           <CTA />
         </section>
+
       </main>
       
       <Footer />

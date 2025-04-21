@@ -9,7 +9,7 @@ const HowItWorks = () => {
     },
     {
       number: '02',
-      title: '구독 설정',
+      title: '회원가입 후 계정 연동',
       description: '알림 수신 설정을 켜서 매일 아침 컨텐츠를 받아보세요.',
     },
     {

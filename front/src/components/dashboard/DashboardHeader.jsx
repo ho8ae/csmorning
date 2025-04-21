@@ -18,7 +18,7 @@ const DashboardHeader = () => {
               className="inline-flex items-center md:px-4 md:py-2 bg-blue-800 hover:bg-blue-900 text-white font-medium rounded-md transition-colors duration-200"
             >
 
-              <p className="text-sm p-0.5 m-2">프리미엄 맛보기</p>
+              <p className="text-sm p-0.5 m-2">여러가지 기능 맛보기</p>
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 className="h-5 w-5 ml-1"
