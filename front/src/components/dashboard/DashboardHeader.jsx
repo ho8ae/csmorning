@@ -9,19 +9,18 @@ const DashboardHeader = () => {
   return (
     <header className="bg-white shadow-sm border-b border-gray-200 mb-4">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col justify-between items-center py-4">
-          <div className="flex gap-4 items-center space-x-4">
+        <div className="py-4">
+          <div className="flex flex-col md:flex-row w-full gap-4 md:justify-center items-center">
             <AccountLinkButton />
 
             <Link
               to="/premium-features"
-              className="inline-flex items-center md:px-4 md:py-2 bg-blue-800 hover:bg-blue-900 text-white font-medium rounded-md transition-colors duration-200"
+              className="flex items-center justify-center w-full md:w-auto h-12 px-4 bg-blue-800 hover:bg-blue-900 text-white font-medium rounded-md transition-colors duration-200"
             >
-
-              <p className="text-sm p-0.5 m-2">여러가지 기능 맛보기(개발 중)</p>
+              <p className="text-sm whitespace-nowrap">여러가지 기능 맛보기(개발 중)</p>
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5 ml-1"
+                className="h-5 w-5 ml-1 flex-shrink-0"
                 viewBox="0 0 20 20"
                 fill="currentColor"
               >

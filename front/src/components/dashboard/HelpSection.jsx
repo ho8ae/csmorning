@@ -1,4 +1,6 @@
 import { motion } from 'framer-motion'; // eslint-disable-line no-unused-vars
+import { IoMdMail } from 'react-icons/io';
+import { RiLogoutBoxRLine } from 'react-icons/ri';
 
 const HelpSection = ({ onLogout }) => {
   return (
@@ -21,16 +23,27 @@ const HelpSection = ({ onLogout }) => {
 
       <div className="flex flex-wrap justify-center gap-4">
         <button
-          onClick={() => window.open('http://pf.kakao.com/_Sxkswn', '_blank')}
-          className="px-4 py-2 text-yellow-700 bg-yellow-300 rounded-md hover:bg-yellow-500"
+          onClick={() =>
+            window.open(
+              'https://capable-hydrogen-361.notion.site/1dce7274f15f817d8b03fa46dc92c8c7?pvs=105',
+              '_blank',
+            )
+          }
+          className="px-4 py-2 text-black-700 bg-gray-300 rounded-md hover:bg-gray-500"
         >
-          카카오톡 문의하기
+          <div className="flex items-center gap-2">
+            <IoMdMail /> 문의사항
+          </div>
         </button>
+
         <button
           onClick={onLogout}
           className="px-4 py-2 text-red-700 bg-red-100 rounded-md hover:bg-red-200"
         >
-          로그아웃
+          <div className="flex items-center gap-2">
+            <RiLogoutBoxRLine /> 로그아웃
+            
+          </div>
         </button>
       </div>
     </motion.div>

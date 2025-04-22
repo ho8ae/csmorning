@@ -54,8 +54,7 @@ const LandingPage = () => {
           <Testimonials />
         </section>
 
-   
-        
+  
         <section id="contact">
           <CTA />
         </section>
