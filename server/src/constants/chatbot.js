@@ -76,3 +76,8 @@ const RESPONSE_MESSAGES = {
       }
     ]
   };
+
+  module.exports = {
+    RESPONSE_MESSAGES,
+    QUICK_REPLIES
+  };
