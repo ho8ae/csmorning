@@ -39,35 +39,73 @@ function scheduleDailyQuestion() {
   console.log('스케줄러가 초기화되었습니다.');
 }
 
+
 /**
- * 오늘의 질문 생성 및 설정
+ * 오늘의 질문 생성 및 설정 (중복 방지 기능 추가)
  */
 async function createDailyQuestion() {
   try {
     console.log('오늘의 질문 설정 시작...');
-
-    // 랜덤 질문 선택
-    const questions = await prisma.question.findMany({
-      where: { active: true },
+    
+    // 1. 이미 DailyQuestion에 있는 questionId 목록 가져오기
+    const existingDailyQuestions = await prisma.dailyQuestion.findMany({
+      select: {
+        questionId: true,
+      },
     });
-
-    if (questions.length === 0) {
-      console.log('활성화된 질문이 없습니다.');
-      return;
-    }
-
-    const randomIndex = Math.floor(Math.random() * questions.length);
-    const selectedQuestion = questions[randomIndex];
-
-    // 오늘의 질문으로 설정
-    await prisma.dailyQuestion.create({
-      data: {
-        questionId: selectedQuestion.id,
-        sentDate: new Date(),
+    
+    // 이미 사용된 questionId 배열 생성
+    const usedQuestionIds = existingDailyQuestions.map(dq => dq.questionId);
+    
+    // 2. 아직 사용되지 않은 활성화된 질문들 찾기
+    const unusedQuestions = await prisma.question.findMany({
+      where: { 
+        active: true,
+        id: { notIn: usedQuestionIds },
       },
     });
 
-    console.log(`오늘의 질문이 설정되었습니다: ${selectedQuestion.text}`);
+    // 3-1. 사용되지 않은 질문이 있는 경우
+    if (unusedQuestions.length > 0) {
+      // 랜덤하게 질문 선택
+      const randomIndex = Math.floor(Math.random() * unusedQuestions.length);
+      const selectedQuestion = unusedQuestions[randomIndex];
+      
+      // 오늘의 질문으로 설정
+      await prisma.dailyQuestion.create({
+        data: {
+          questionId: selectedQuestion.id,
+          sentDate: new Date(),
+        },
+      });
+      
+      console.log(`새로운 오늘의 질문이 설정되었습니다: ${selectedQuestion.text}`);
+    } 
+    // 3-2. 모든 질문이 이미 사용된 경우, 다시 처음부터 시작 (가장 오래된 것부터 재사용)
+    else {
+      console.log('모든 질문이 이미 사용되었습니다. 가장 오래된 질문부터 재사용합니다.');
+      
+      // 가장 오래 전에 사용된 질문 찾기
+      const oldestUsedQuestion = await prisma.dailyQuestion.findFirst({
+        orderBy: { sentDate: 'asc' },
+        include: { question: true },
+      });
+      
+      if (!oldestUsedQuestion) {
+        console.log('질문 데이터베이스에 문제가 있습니다.');
+        return;
+      }
+      
+      // 오늘의 질문으로 설정
+      await prisma.dailyQuestion.create({
+        data: {
+          questionId: oldestUsedQuestion.questionId,
+          sentDate: new Date(),
+        },
+      });
+      
+      console.log(`재사용된 오늘의 질문이 설정되었습니다: ${oldestUsedQuestion.question.text}`);
+    }
   } catch (error) {
     console.error('오늘의 질문 설정 중 오류 발생:', error);
   }
