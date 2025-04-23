@@ -55,3 +55,4 @@ networks:
   app-network:
     driver: bridge
     name: csmorning-network
+
