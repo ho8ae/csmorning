@@ -1,0 +1,66 @@
+@import "tailwindcss";
+
+@font-face {
+    font-family: 'NanumBarunpen';
+    src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_two@1.0/NanumBarunpen.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'SBAggroB';
+    src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_2108@1.1/SBAggroB.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'ChosunGu';
+    src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_20-04@1.0/ChosunGu.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+}
+
+
+.text-main-yellow{
+    color: #FFFB00   
+}
+
+.text-main-navyblue{
+    color: #344CB7   
+}
+
+
+/* 가로 스크롤 방지 스타일 추가 */
+html,body,#root {
+    width:  100%;
+    max-width: 100%;
+    overflow-x: hidden;
+    margin:0;
+    padding:0;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+/* 사이드바 트랜지션 추가 */
+.transition-width {
+    transition-property: width;
+    transition-duration: 300ms;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 캘린더 그리드를 위한 사용자 정의 클래스 */
+.grid-cols-53 {
+    grid-template-columns: repeat(53, minmax(0, 1fr));
+  }
+  
+  /* 텍스트 라인 제한 */
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }

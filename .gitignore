@@ -1,1 +1,6 @@
+
+*.pem
+certbot/
+.env
 .DS_Store
+*.log

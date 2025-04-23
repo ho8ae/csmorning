@@ -1,0 +1,175 @@
+// prisma/schema.prisma
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  user
+  admin
+}
+
+model User {
+  id            Int       @id @default(autoincrement())
+  kakaoId       String?   @unique
+  email         String?   @unique
+  password      String?   // 관리자용 비밀번호 (해시됨)
+  nickname      String?
+  profileImage  String?
+  
+  // 카카오 로그인으로 수집하는 필수 항목들
+  name          String?   // 이름
+  gender        String?   // 성별 (male/female)
+  ageGroup      String?   // 연령대 (10~19, 20~29, 30~39 등)
+  birthDate     DateTime? // 생일
+  birthYear     Int?      // 출생연도
+  phoneNumber   String?   // 카카오계정(전화번호)
+  
+  isSubscribed  Boolean   @default(false)
+  isTemporary   Boolean   @default(false)
+  totalAnswered Int       @default(0)
+  correctAnswers Int      @default(0)
+  role          UserRole  @default(user)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // premium 관련 필드
+  activityCalendar ActivityCalendar[]
+  discussionComments DiscussionComment[]
+  discussionReactions DiscussionReaction[]
+
+  responses    Response[]
+  donations    Donation[]
+  kakaoMappings   UserKakaoMapping[]
+
+  // 프리미엄 멤버십 관련 필드
+  isPremium       Boolean  @default(false)
+  premiumUntil    DateTime?
+}
+
+model Question {
+  id          Int      @id @default(autoincrement())
+  text        String
+  description String?  // 질문에 대한 설명 추가
+  options     Json     // ["옵션1", "옵션2", "옵션3", "옵션4"]
+  correctOption Int    // 올바른 옵션의 인덱스 (0 기반)
+  explanation String
+  category    String
+  difficulty  String   @default("medium")
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  dailyQuestions DailyQuestion[]
+}
+
+model DailyQuestion {
+  id         Int      @id @default(autoincrement())
+  questionId Int
+  question   Question @relation(fields: [questionId], references: [id])
+  sentDate   DateTime @default(now())
+  
+  responses  Response[]
+}
+
+model Response {
+  id              Int      @id @default(autoincrement())
+  userId          Int
+  user            User     @relation(fields: [userId], references: [id])
+  dailyQuestionId Int
+  dailyQuestion   DailyQuestion @relation(fields: [dailyQuestionId], references: [id])
+  answer          Int      // 사용자가 선택한 옵션 인덱스
+  isCorrect       Boolean
+  respondedAt     DateTime @default(now())
+}
+
+model Donation {
+  id              Int      @id @default(autoincrement())
+  userId          Int
+  user            User     @relation(fields: [userId], references: [id])
+  amount          Int      @default(3000)
+  tid             String?  // 카카오페이 거래 ID
+  orderCode       String   @unique // 주문 고유 코드
+  status          String   @default("ready") // ready, approved, canceled, failed
+  message         String?
+  approvedAt      DateTime?
+  createdAt       DateTime @default(now())
+}
+
+model AppConfig {
+  key     String   @id // 설정 키 (예: 'kakao_tokens')
+  value   String   // JSON 형식의 설정 값
+  updatedAt DateTime @default(now()) @updatedAt
+}
+
+model UserKakaoMapping {
+  id              Int      @id @default(autoincrement())
+  userId          Int
+  user            User     @relation(fields: [userId], references: [id])
+  kakaoChannelId  String   @unique  // 카카오톡 채널 사용자 ID (해시)
+  kakaoId         String?  // 카카오 로그인 API ID (숫자)
+  linkCode        String?  // 연동 코드
+  linkCodeExpiry  DateTime? // 연동 코드 만료 시간
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model ActivityCalendar {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+  date      DateTime @db.Date // 날짜만 필요
+  count     Int      @default(1) // 하루에 몇 개의 활동을 했는지
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, date]) // 사용자와 날짜의 조합은 유일해야 함
+}
+
+// 토론을 위한 모델
+model Discussion {
+  id            Int      @id @default(autoincrement())
+  title         String
+  description   String
+  type          String   // 'debate' 또는 'free'
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  comments      DiscussionComment[]
+  reactions     DiscussionReaction[]
+}
+
+model DiscussionComment {
+  id            Int      @id @default(autoincrement())
+  discussionId  Int
+  discussion    Discussion @relation(fields: [discussionId], references: [id], onDelete: Cascade)
+  userId        Int
+  user          User     @relation(fields: [userId], references: [id])
+  content       String
+  stance        String?  // 'for', 'against', 'neutral' - debate 형식일 때만 사용
+  parentId      Int?     // 답글을 위한 필드
+  parent        DiscussionComment? @relation("CommentReplies", fields: [parentId], references: [id])
+  replies       DiscussionComment[] @relation("CommentReplies")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  reactions     DiscussionReaction[]
+}
+
+model DiscussionReaction {
+  id            Int      @id @default(autoincrement())
+  discussionId  Int
+  discussion    Discussion @relation(fields: [discussionId], references: [id], onDelete: Cascade)
+  userId        Int
+  user          User     @relation(fields: [userId], references: [id])
+  commentId     Int?     // 특정 댓글에 대한 반응인 경우
+  comment       DiscussionComment? @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  emoji         String   // 이모지 코드
+  createdAt     DateTime @default(now())
+
+  @@unique([userId, discussionId, commentId, emoji]) // 중복 반응 방지
+}

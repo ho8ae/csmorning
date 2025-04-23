@@ -1,0 +1,35 @@
+name: Deploy CS Morning
+
+on:
+  push:
+    branches: [ main ]
+    # paths 필터 제거 - 모든 변경에 반응
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Set up SSH
+        uses: webfactory/ssh-agent@v0.7.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+          
+      - name: Add host key to known_hosts
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
+      
+      - name: Deploy to server
+        run: |
+          ssh ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
+            cd ~/cs-morning-project
+            git pull origin main
+            docker-compose down
+            docker-compose build
+            docker-compose up -d
+            sleep 15
+            cd ~/nginx-proxy
+            docker restart nginx-proxy
+          EOF

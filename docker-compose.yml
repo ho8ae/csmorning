@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  nginx:
+    image: nginx:alpine
+    container_name: nginx-csmorning
+    restart: always
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+    depends_on:
+      - landing-page
+      - api-server
+    networks:
+      - app-network
+
+  landing-page:
+    build:
+      context: ./front
+      dockerfile: Dockerfile
+    container_name: landing-page-csmorning
+    restart: always
+    networks:
+      - app-network
+
+  api-server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: api-server-csmorning
+    restart: always
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=${DATABASE_URL}
+      - PORT=3000
+      - KAKAO_ADMIN_KEY=${KAKAO_ADMIN_KEY}
+      - KAKAO_PAY_CID=${KAKAO_PAY_CID}
+      - SERVICE_URL=${SERVICE_URL}
+      - ADMIN_API_KEY=${ADMIN_API_KEY}
+      - VITE_KAKAO_REST_API_KEY=${VITE_KAKAO_REST_API_KEY}
+    networks:
+      - app-network
+
+  certbot:
+    image: certbot/certbot
+    container_name: certbot-csmorning
+    volumes:
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+    name: csmorning-network
+
