@@ -2,7 +2,7 @@
 import axios from 'axios';
 
 const KAKAO_REST_API_KEY = process.env.REACT_APP_KAKAO_REST_API_KEY;
-const KAKAO_REDIRECT_URI = `${window.location.origin}/auth/kakao/callback`;
+const KAKAO_REDIRECT_URI = `${window.location.origin}/api/auth/kakao/callback`;
 
 /**
  * 카카오 로그인 URL 생성

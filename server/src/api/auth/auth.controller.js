@@ -106,29 +106,31 @@ const redirectToFrontendCallback = async (req, res) => {
  * (카카오 싱크 플러그인에서 호출됨)
  */
 const handleKakaoSyncCallback = async (req, res) => {
+  console.log('카카오 싱크 콜백 요청 도착:', req.query);
   try {
     const { code, continue: continueUrl } = req.query;
 
-    // 1. 인가 코드로 토큰 받기
+    if (!code || !continueUrl) {
+      return res.status(400).json({ message: 'code 또는 continue URL 누락' });
+    }
+
     const tokenResponse = await kakaoService.getToken(code);
+    console.log('카카오 토큰 응답:', tokenResponse);
+
+    if (!tokenResponse || !tokenResponse.access_token) {
+      return res.status(500).json({ message: '카카오 토큰 요청 실패' });
+    }
+
     const { access_token } = tokenResponse;
 
-    // 2. 사용자 정보 가져오기
     const userInfo = await kakaoService.getUserInfo(access_token);
-
-    // 3. 서비스 약관 동의 내역 확인
     const agreements = await kakaoService.getAgreements(access_token);
-
-    // 4. 회원 등록/연동 처리
     const user = await authService.findOrCreateKakaoUser(userInfo);
 
-    // 5. 카카오 싱크 플러그인 완료 처리를 위한 리다이렉트
     return res.redirect(302, continueUrl);
   } catch (error) {
     console.error('카카오 싱크 콜백 처리 실패:', error);
-    res
-      .status(500)
-      .json({ message: '카카오 싱크 처리 중 오류가 발생했습니다.' });
+    res.status(500).json({ message: '카카오 싱크 처리 중 오류가 발생했습니다.' });
   }
 };
 

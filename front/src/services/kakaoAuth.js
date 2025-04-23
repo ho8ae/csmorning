@@ -1,7 +1,7 @@
 // services/kakaoAuth.js
 const KAKAO_REST_API_KEY = import.meta.env.VITE_KAKAO_REST_API_KEY;
 // 프론트엔드 라우트로 변경 (백엔드가 아닌 프론트엔드에서 처리)
-const KAKAO_REDIRECT_URI = `${window.location.origin}/kakao-callback`;
+const KAKAO_REDIRECT_URI = `${window.location.origin}/api/auth/kakao/callback`;
 
 /**
  * 카카오 로그인 URL 생성
