@@ -33,6 +33,22 @@ function RegisterPage() {
         confirmPassword: value !== formData.password ? '비밀번호가 일치하지 않습니다.' : null
       }));
     }
+    
+    // 출생연도가 입력될 때 숫자만 허용
+    if (name === 'birthYear') {
+      // 숫자가 아닌 문자 입력 방지
+      if (value && !/^\d*$/.test(value)) {
+        setFormErrors((prev) => ({
+          ...prev,
+          birthYear: '숫자만 입력해주세요.'
+        }));
+      } else {
+        setFormErrors((prev) => ({
+          ...prev,
+          birthYear: null
+        }));
+      }
+    }
   };
 
   // 회원가입 요청
@@ -62,9 +78,16 @@ function RegisterPage() {
     }
     
     try {
+      // 회원가입 API 호출을 위해 데이터 준비
+      // 출생연도를 정수형으로 변환
+      const registerData = {
+        ...formData,
+        birthYear: parseInt(formData.birthYear, 10) // 문자열에서 정수로 변환
+      };
+      
       // 회원가입 API 호출
       const { register } = useAuthStore.getState();
-      await register(formData);
+      await register(registerData);
       
       // 성공 시 로그인 페이지 또는 대시보드로 이동
       navigate('/dashboard');
@@ -270,6 +293,12 @@ function RegisterPage() {
                 } rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500`}
                 value={formData.birthYear}
                 onChange={handleChange}
+                onKeyPress={(e) => {
+                  // 숫자만 입력 가능하도록 제한
+                  if (!/[0-9]/.test(e.key)) {
+                    e.preventDefault();
+                  }
+                }}
               />
               {formErrors.birthYear && (
                 <p className="mt-1 text-sm text-red-500">{formErrors.birthYear}</p>
