@@ -23,6 +23,8 @@ router.post('/logout', authController.logout);
 // 카카오 로그인 리다이렉트 처리
 router.get('/kakao/callback', authController.redirectToFrontendCallback);
 
+router.get('/kakao/sync-callback', authController.handleKakaoSyncCallback);
+
 // 카카오 채널 연동
 router.post('/link-kakao-channel', isAuthenticated, authController.linkKakaoChannel);
 
