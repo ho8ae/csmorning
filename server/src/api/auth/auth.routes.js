@@ -36,4 +36,6 @@ router.post('/update-premium', isAuthenticated, validate(authValidation.updatePr
 // 카카오 계정 변동 웹훅
 router.post('/webhook/kakao', authController.handleKakaoWebhook);
 
+router.post('/admin/unlink-kakao-user', isAdmin, authController.unlinkKakaoUser);
+
 module.exports = router;

@@ -379,6 +379,58 @@ async function getAgreements(accessToken) {
     throw error;
   }
 }
+
+/**
+ * 카카오 사용자 연결 끊기 (관리자용)
+ * @param {string} kakaoId - 연결 끊기할 카카오 사용자 ID
+ * @returns {Promise<object>} 응답 데이터
+ */
+async function unlinkKakaoUser(kakaoId) {
+  try {
+    console.log(`카카오 사용자 ID ${kakaoId} 연결 끊기 시도...`);
+    
+    // 카카오 API 호출
+    const response = await axios({
+      method: 'post',
+      url: 'https://kapi.kakao.com/v1/user/unlink',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Authorization': `KakaoAK ${process.env.KAKAO_ADMIN_KEY}`
+      },
+      data: qs.stringify({
+        target_id_type: 'user_id',
+        target_id: kakaoId
+      })
+    });
+    
+    console.log('카카오 API 응답:', response.data);
+    
+    // 데이터베이스 업데이트
+    const user = await prisma.user.findFirst({
+      where: { kakaoId: kakaoId.toString() }
+    });
+    
+    if (user) {
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { kakaoId: null }
+      });
+      
+      console.log(`사용자 ${user.id}의 카카오 연결이 성공적으로 해제되었습니다.`);
+    } else {
+      console.log(`카카오 ID ${kakaoId}와 매칭되는 사용자가 데이터베이스에 없습니다.`);
+    }
+    
+    return {
+      success: true,
+      message: '카카오 연결이 성공적으로 해제되었습니다.',
+      data: response.data
+    };
+  } catch (error) {
+    console.error('카카오 사용자 연결 끊기 실패:', error.response?.data || error.message);
+    throw error;
+  }
+}
 module.exports = {
   sendMessage,
   formatSkillResponse,
@@ -389,4 +441,5 @@ module.exports = {
   getToken,
   getUserInfo,
   getAgreements,
+  unlinkKakaoUser,
 };

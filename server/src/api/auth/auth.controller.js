@@ -388,6 +388,32 @@ const handleUserScopeWithdraw = async (req, res) => {
   return res.status(200).end();
 };
 
+/**
+ * 카카오 사용자 연결 끊기 (관리자용)
+ */
+const unlinkKakaoUser = async (req, res, next) => {
+  try {
+    const { kakaoId } = req.body;
+    
+    if (!kakaoId) {
+      return res.status(400).json({
+        success: false,
+        message: 'kakaoId 파라미터가 필요합니다.'
+      });
+    }
+    
+    const result = await kakaoService.unlinkKakaoUser(kakaoId);
+    
+    return res.status(200).json({
+      success: true,
+      message: '카카오 연결이 성공적으로 해제되었습니다.',
+      data: result
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   login,
   kakaoLogin,
@@ -400,4 +426,5 @@ module.exports = {
   handleKakaoSyncCallback,
   handleUnlinkWebhook,
   handleKakaoWebhook,
+  unlinkKakaoUser
 };
