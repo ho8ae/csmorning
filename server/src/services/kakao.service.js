@@ -306,10 +306,87 @@ async function initializeToken() {
   }
 }
 
+
+
+/**
+ * 인가 코드로 토큰 받기
+ * @param {string} code - 인가 코드
+ * @returns {Promise<object>} 토큰 정보
+ */
+async function getToken(code) {
+  try {
+    const response = await axios({
+      method: 'post',
+      url: `${KAKAO_AUTH_URL}/oauth/token`,
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      data: qs.stringify({
+        grant_type: 'authorization_code',
+        client_id: process.env.KAKAO_REST_API_KEY,
+        redirect_uri: `${process.env.SERVICE_URL}/api/auth/kakao/sync-callback`,
+        code: code
+      })
+    });
+    
+    return response.data;
+  } catch (error) {
+    console.error('카카오 토큰 받기 실패:', error.response?.data || error.message);
+    throw error;
+  }
+}
+
+/**
+ * 액세스 토큰으로 사용자 정보 가져오기
+ * @param {string} accessToken - 액세스 토큰
+ * @returns {Promise<object>} 사용자 정보
+ */
+async function getUserInfo(accessToken) {
+  try {
+    const response = await axios({
+      method: 'get',
+      url: `${KAKAO_API_URL}/v2/user/me`,
+      headers: {
+        'Authorization': `Bearer ${accessToken}`
+      }
+    });
+    
+    return response.data;
+  } catch (error) {
+    console.error('카카오 사용자 정보 가져오기 실패:', error.response?.data || error.message);
+    throw error;
+  }
+}
+
+/**
+ * 서비스 약관 동의 내역 확인
+ * @param {string} accessToken - 액세스 토큰
+ * @returns {Promise<object>} 동의 내역 정보
+ */
+async function getAgreements(accessToken) {
+  try {
+    const response = await axios({
+      method: 'get',
+      url: `${KAKAO_API_URL}/v2/user/scopes`,
+      headers: {
+        'Authorization': `Bearer ${accessToken}`
+      }
+    });
+    
+    return response.data;
+  } catch (error) {
+    console.error('카카오 서비스 약관 동의 내역 확인 실패:', error.response?.data || error.message);
+    throw error;
+  }
+}
 module.exports = {
   sendMessage,
   formatSkillResponse,
   createPaymentRequest,
   approvePayment,
-  initializeToken
+  initializeToken,
+  getValidAccessToken,
+  getToken,
+  getUserInfo,
+  getAgreements,
 };

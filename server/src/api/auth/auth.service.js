@@ -236,9 +236,48 @@ const updateUserPremium = async (userId, isPremium, premiumPlan) => {
   return userWithoutPassword;
 };
 
+
+/**
+ * 카카오 사용자 정보로 회원 찾거나 생성
+ * @param {object} userInfo - 카카오 사용자 정보
+ * @returns {Promise<object>} 사용자 정보
+ */
+async function findOrCreateKakaoUser(userInfo) {
+  const kakaoId = userInfo.id.toString();
+  
+  // 기존 사용자 찾기
+  let user = await prisma.user.findFirst({
+    where: { kakaoId }
+  });
+  
+  if (!user) {
+    // 새 사용자 생성
+    const nickname = userInfo.properties?.nickname || `카카오유저${kakaoId.slice(-5)}`;
+    const email = userInfo.kakao_account?.email || null;
+    
+    user = await prisma.user.create({
+      data: {
+        kakaoId,
+        nickname,
+        email,
+        name: nickname,
+        userType: 'USER',
+        // 필요한 다른 필드들...
+      }
+    });
+    
+    console.log('카카오 사용자 신규 생성:', user.id);
+  } else {
+    console.log('기존 카카오 사용자 발견:', user.id);
+  }
+  
+  return user;
+}
+
 module.exports = {
   login,
   processKakaoLogin,
   register,
-  updateUserPremium
+  updateUserPremium,
+  findOrCreateKakaoUser
 };
