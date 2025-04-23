@@ -398,5 +398,6 @@ module.exports = {
   register,
   updatePremium,
   handleKakaoSyncCallback,
-  handleUnlinkWebhook
+  handleUnlinkWebhook,
+  handleKakaoWebhook,
 };
