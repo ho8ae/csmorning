@@ -155,7 +155,7 @@ const QUICK_REPLIES = {
     {
       label: '오늘의 질문 통계',
       action: 'message',
-      messageText: '오늘의 질문 통계',
+      messageText: '질문 통계',
     },
     {
       label: '최신 토론 확인',

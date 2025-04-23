@@ -315,6 +315,7 @@ const handleKakaoMessage = async (req, res, next) => {
     } else if (utterance.includes('구독')) {
       responseBody = await handleSubscriptionCommand(req, user, utterance);
     } 
+
     // 기능 맛보기 관련 명령어 처리 추가
     else if (utterance.includes('기능 맛보기') || utterance.includes('기능맛보기')) {
       responseBody = await handleFeaturePreviewCommand(req, user);
@@ -324,7 +325,7 @@ const handleKakaoMessage = async (req, res, next) => {
       responseBody = await handleCategoryPerformanceCommand(req, user);
     } else if (utterance.includes('내 활동 캘린더') || utterance.includes('활동 캘린더')) {
       responseBody = await handleActivityCalendarCommand(req, user);
-    } else if (utterance.includes('오늘의 질문 통계') || utterance.includes('질문 통계')) {
+    } else if (utterance.includes('오늘 질문 통계') || utterance.includes('질문 통계')) {
       responseBody = await handleTodayQuestionStatsCommand(req, user);
     } else if (utterance.includes('최신 토론')) {
       responseBody = await handleLatestDiscussionsCommand(req, user);
