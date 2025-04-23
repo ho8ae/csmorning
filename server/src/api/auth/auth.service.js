@@ -251,18 +251,30 @@ async function findOrCreateKakaoUser(userInfo) {
   });
   
   if (!user) {
-    // 새 사용자 생성
-    const nickname = userInfo.properties?.nickname || `카카오유저${kakaoId.slice(-5)}`;
-    const email = userInfo.kakao_account?.email || null;
+    const kakaoAccount = userResponse.data.kakao_account;
+    
+    // 생일 처리 (MMDD 형식을 Date 객체로 변환)
+    let birthDate = null;
+    if (kakaoAccount.birthday) {
+      const month = kakaoAccount.birthday.substring(0, 2);
+      const day = kakaoAccount.birthday.substring(2, 4);
+      const year = kakaoAccount.birthyear || new Date().getFullYear();
+      birthDate = new Date(year, month - 1, day);
+    }
     
     user = await prisma.user.create({
       data: {
-        kakaoId,
-        nickname,
-        email,
-        name: nickname,
-        userType: 'USER',
-        // 필요한 다른 필드들...
+        kakaoId: kakaoId.toString(),
+        nickname: kakaoAccount.profile?.nickname || `사용자${Math.floor(1000 + Math.random() * 9000)}`,
+        profileImage: kakaoAccount.profile?.thumbnail_image_url,
+        email: kakaoAccount.email,
+        gender: kakaoAccount.gender,
+        ageGroup: kakaoAccount.age_range,
+        birthDate: birthDate,
+        birthYear: kakaoAccount.birthyear ? parseInt(kakaoAccount.birthyear) : null,
+        phoneNumber: kakaoAccount.phone_number,
+        isSubscribed: true,
+        role: 'user'
       }
     });
     
