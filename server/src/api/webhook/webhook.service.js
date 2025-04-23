@@ -366,7 +366,308 @@ const linkUserAccounts = async (prisma, linkCode, userId) => {
   }
 };
 
+/**
+ * 사용자의 정답률 통계 조회
+ * @param {object} prisma - Prisma 클라이언트
+ * @param {number} userId - 사용자 ID
+ * @returns {Promise<Object>} 정답률 통계
+ */
+const getUserAccuracyStats = async (prisma, userId) => {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        totalAnswered: true,
+        correctAnswers: true
+      }
+    });
+    
+    if (!user) {
+      throw new Error('사용자를 찾을 수 없습니다.');
+    }
+    
+    const totalAnswered = user.totalAnswered || 0;
+    const correctAnswers = user.correctAnswers || 0;
+    const accuracy = totalAnswered > 0 
+      ? ((correctAnswers / totalAnswered) * 100).toFixed(1) 
+      : '0.0';
+    
+    return {
+      totalAnswered,
+      correctAnswers,
+      accuracy
+    };
+  } catch (error) {
+    console.error('사용자 정답률 통계 조회 중 오류:', error);
+    throw error;
+  }
+};
 
+/**
+ * 사용자의 카테고리별 성과 조회
+ * @param {object} prisma - Prisma 클라이언트
+ * @param {number} userId - 사용자 ID
+ * @returns {Promise<Object>} 카테고리별 성과 데이터
+ */
+const getUserCategoryPerformance = async (prisma, userId) => {
+  try {
+    // 카테고리 목록 조회
+    const categories = await prisma.question.groupBy({
+      by: ['category'],
+      _count: {
+        id: true
+      }
+    });
+    
+    // 사용자의 카테고리별 성과 계산
+    const result = {};
+    
+    for (const { category } of categories) {
+      // 특정 카테고리에 대한 사용자의 응답 조회
+      const userResponses = await prisma.response.findMany({
+        where: {
+          userId,
+          dailyQuestion: {
+            question: {
+              category
+            }
+          }
+        },
+        include: {
+          dailyQuestion: {
+            include: {
+              question: true
+            }
+          }
+        }
+      });
+      
+      const totalAnswered = userResponses.length;
+      const correctAnswers = userResponses.filter(r => r.isCorrect).length;
+      
+      if (totalAnswered > 0) {
+        result[category] = {
+          totalAnswered,
+          correctAnswers,
+          correctRate: totalAnswered > 0 
+            ? ((correctAnswers / totalAnswered) * 100).toFixed(1) 
+            : '0.0'
+        };
+      }
+    }
+    
+    return result;
+  } catch (error) {
+    console.error('사용자 카테고리 성과 조회 중 오류:', error);
+    throw error;
+  }
+};
+
+/**
+ * 사용자의 활동 캘린더(잔디) 통계 조회
+ * @param {object} prisma - Prisma 클라이언트
+ * @param {number} userId - 사용자 ID
+ * @returns {Promise<Object>} 활동 캘린더 통계
+ */
+const getUserActivityStats = async (prisma, userId) => {
+  try {
+    // 전체 참여일 조회
+    const activities = await prisma.activityCalendar.findMany({
+      where: { userId },
+      orderBy: { date: 'asc' }
+    });
+    
+    const totalDays = activities.length;
+    
+    // 최장 연속일 및 현재 연속일 계산
+    let longestStreak = 0;
+    let currentStreak = 0;
+    let lastDate = null;
+    
+    activities.forEach((activity, index) => {
+      const currentDate = new Date(activity.date);
+      
+      // 첫 번째 기록이거나 직전 날짜와 연속적인 경우
+      if (index === 0 || isConsecutiveDay(lastDate, currentDate)) {
+        currentStreak++;
+      } else {
+        // 연속이 끊긴 경우
+        currentStreak = 1;
+      }
+      
+      // 최장 연속일 업데이트
+      if (currentStreak > longestStreak) {
+        longestStreak = currentStreak;
+      }
+      
+      lastDate = currentDate;
+    });
+    
+    // 현재 연속일 계산 (오늘 기준)
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    if (lastDate && isConsecutiveDay(lastDate, today)) {
+      // 마지막 활동이 어제라면 연속 중
+      // 현재 연속일은 그대로 유지
+    } else if (lastDate && isSameDay(lastDate, today)) {
+      // 마지막 활동이 오늘이라면 현재 연속일 유지
+    } else {
+      // 마지막 활동이 어제도 오늘도 아니라면 연속 끊김
+      currentStreak = 0;
+    }
+    
+    return {
+      totalDays,
+      longestStreak,
+      currentStreak
+    };
+  } catch (error) {
+    console.error('사용자 활동 통계 조회 중 오류:', error);
+    throw error;
+  }
+};
+
+/**
+ * 두 날짜가 연속된 날인지 확인
+ * @param {Date} date1 - 첫 번째 날짜
+ * @param {Date} date2 - 두 번째 날짜
+ * @returns {boolean} 연속된 날인지 여부
+ */
+const isConsecutiveDay = (date1, date2) => {
+  if (!date1 || !date2) return false;
+  
+  const d1 = new Date(date1);
+  const d2 = new Date(date2);
+  
+  d1.setHours(0, 0, 0, 0);
+  d2.setHours(0, 0, 0, 0);
+  
+  // 하루 차이 (86400000 밀리초 = 24시간)
+  const diffDays = Math.round((d2 - d1) / 86400000);
+  return diffDays === 1;
+};
+
+/**
+ * 두 날짜가 같은 날인지 확인
+ * @param {Date} date1 - 첫 번째 날짜
+ * @param {Date} date2 - 두 번째 날짜
+ * @returns {boolean} 같은 날인지 여부
+ */
+const isSameDay = (date1, date2) => {
+  if (!date1 || !date2) return false;
+  
+  const d1 = new Date(date1);
+  const d2 = new Date(date2);
+  
+  return d1.getFullYear() === d2.getFullYear() &&
+         d1.getMonth() === d2.getMonth() &&
+         d1.getDate() === d2.getDate();
+};
+
+/**
+ * 오늘의 질문 통계 조회
+ * @param {object} prisma - Prisma 클라이언트
+ * @returns {Promise<Object>} 오늘의 질문 통계
+ */
+const getTodayQuestionStats = async (prisma) => {
+  try {
+    // 오늘의 질문 가져오기
+    const todayQuestion = await getTodayQuestion(prisma);
+    
+    if (!todayQuestion) {
+      throw new Error('오늘의 질문이 없습니다.');
+    }
+    
+    // 응답 통계 조회
+    const responses = await prisma.response.findMany({
+      where: {
+        dailyQuestionId: todayQuestion.id
+      }
+    });
+    
+    const totalResponses = responses.length;
+    const correctResponses = responses.filter(r => r.isCorrect).length;
+    const accuracy = totalResponses > 0 
+      ? ((correctResponses / totalResponses) * 100).toFixed(1) 
+      : '0.0';
+    
+    // 가장 많이 선택된 오답 찾기
+    if (totalResponses > 0 && correctResponses < totalResponses) {
+      // 선택지별 응답 수 집계
+      const optionCounts = {};
+      
+      responses.forEach(response => {
+        const optionIndex = response.answer;
+        
+        if (!response.isCorrect) {
+          optionCounts[optionIndex] = (optionCounts[optionIndex] || 0) + 1;
+        }
+      });
+      
+      // 가장 많이 선택된 오답 찾기
+      let mostCommonWrong = null;
+      let maxCount = 0;
+      
+      Object.entries(optionCounts).forEach(([optionIndex, count]) => {
+        if (count > maxCount) {
+          mostCommonWrong = parseInt(optionIndex) + 1; // 1 기반 인덱스로 변환
+          maxCount = count;
+        }
+      });
+      
+      return {
+        totalResponses,
+        correctResponses,
+        accuracy,
+        mostCommonWrong
+      };
+    }
+    
+    return {
+      totalResponses,
+      correctResponses,
+      accuracy,
+      mostCommonWrong: null
+    };
+  } catch (error) {
+    console.error('오늘의 질문 통계 조회 중 오류:', error);
+    throw error;
+  }
+};
+
+/**
+ * 최신 토론 목록 조회
+ * @param {object} prisma - Prisma 클라이언트
+ * @param {number} limit - 조회할 토론 수
+ * @returns {Promise<Array>} 최신 토론 목록
+ */
+const getLatestDiscussions = async (prisma, limit = 5) => {
+  try {
+    const discussions = await prisma.discussion.findMany({
+      orderBy: {
+        createdAt: 'desc'
+      },
+      take: limit,
+      select: {
+        id: true,
+        title: true,
+        type: true,
+        createdAt: true,
+        _count: {
+          select: {
+            comments: true
+          }
+        }
+      }
+    });
+    
+    return discussions;
+  } catch (error) {
+    console.error('최신 토론 목록 조회 중 오류:', error);
+    throw error;
+  }
+};
 
 
 
@@ -380,5 +681,10 @@ module.exports = {
   sendMessageToAllSubscribers,
   generateLinkCode,
   getChannelMappingByCode,
-  linkUserAccounts
+  linkUserAccounts,
+  getUserAccuracyStats,
+  getUserCategoryPerformance,
+  getUserActivityStats,
+  getTodayQuestionStats,
+  getLatestDiscussions
 };

@@ -12,7 +12,7 @@ function scheduleDailyQuestion() {
 
   // 매일 아침 8시에 오늘의 질문 알림톡 전송 (한국 시간)
   cron.schedule(
-    '40 19 * * *',
+    '00 08 * * *',
     async () => {
       try {
         console.log('오늘의 질문 알림톡 전송 시작...');

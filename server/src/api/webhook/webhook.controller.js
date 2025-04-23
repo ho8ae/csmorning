@@ -24,7 +24,12 @@ const createKakaoResponse = (text, quickReplies = QUICK_REPLIES.DEFAULT) => {
 /**
  * 카카오 카드 응답 객체 생성
  */
-const createKakaoCardResponse = (title, description, buttons, quickReplies = QUICK_REPLIES.AFTER_LINK) => {
+const createKakaoCardResponse = (
+  title,
+  description,
+  buttons,
+  quickReplies = QUICK_REPLIES.AFTER_LINK,
+) => {
   return {
     version: '2.0',
     template: {
@@ -88,7 +93,7 @@ const handleTodayQuestionCommand = async (req, user) => {
     optionsArray.forEach((option, index) => {
       options += `${index + 1}. ${option}\n`;
     });
-    
+
     // 선택지 수에 맞게 퀵 리플라이 버튼 생성
     for (let i = 0; i < optionsArray.length; i++) {
       quickReplies.push({
@@ -97,7 +102,7 @@ const handleTodayQuestionCommand = async (req, user) => {
         messageText: `${i + 1}`,
       });
     }
-    
+
     // 기존 메뉴도 추가
     quickReplies.push({
       label: '도움말',
@@ -130,7 +135,9 @@ const handleAnswerCommand = async (req, user, utterance) => {
 
   // 옵션 범위 확인
   if (answerIndex < 0 || answerIndex >= options.length) {
-    return createKakaoResponse(RESPONSE_MESSAGES.ANSWER_OUT_OF_RANGE(options.length));
+    return createKakaoResponse(
+      RESPONSE_MESSAGES.ANSWER_OUT_OF_RANGE(options.length),
+    );
   }
 
   // 정답 확인
@@ -154,22 +161,23 @@ const handleAnswerCommand = async (req, user, utterance) => {
     );
 
     // 사용자 통계 업데이트
-    await webhookService.updateUserStats(
-      req.prisma,
-      user.id,
-      isCorrect,
-    );
+    await webhookService.updateUserStats(req.prisma, user.id, isCorrect);
   }
 
   // 응답 메시지 준비
   let responseText;
   if (isCorrect) {
-    responseText = RESPONSE_MESSAGES.CORRECT_ANSWER(todayQuestion.question.explanation);
+    responseText = RESPONSE_MESSAGES.CORRECT_ANSWER(
+      todayQuestion.question.explanation,
+    );
   } else {
     const correctOptionIndex = todayQuestion.question.correctOption;
-    responseText = RESPONSE_MESSAGES.WRONG_ANSWER(correctOptionIndex, todayQuestion.question.explanation);
+    responseText = RESPONSE_MESSAGES.WRONG_ANSWER(
+      correctOptionIndex,
+      todayQuestion.question.explanation,
+    );
   }
-  
+
   return createKakaoResponse(responseText, QUICK_REPLIES.AFTER_ANSWER);
 };
 
@@ -181,58 +189,62 @@ const handleAccountLinkCommand = async (req, user) => {
     // 카카오 채널 ID 추출
     const kakaoChannelId = req.body.userRequest.user.id;
     console.log('카카오 채널 ID:', kakaoChannelId);
-    
+
     // 매핑 조회
     let mapping = null;
     try {
       mapping = await req.prisma.userKakaoMapping.findUnique({
         where: { kakaoChannelId },
-        include: { user: true }
+        include: { user: true },
       });
       console.log('매핑 조회 결과:', mapping);
     } catch (error) {
       console.error('매핑 조회 중 오류:', error);
     }
-    
+
     // 이미 연동된 계정인지 확인
     if (mapping && mapping.user && mapping.user.isTemporary === false) {
       // 이미 연동된 계정인 경우
       return createKakaoCardResponse(
-        "계정 연동 완료",
-        "이미 CS Morning 웹사이트와 계정이 연동되어 있습니다.\n웹사이트에서 동일한 계정으로 서비스를 이용하실 수 있습니다.",
+        '계정 연동 완료',
+        '이미 CS Morning 웹사이트와 계정이 연동되어 있습니다.\n웹사이트에서 동일한 계정으로 서비스를 이용하실 수 있습니다.',
         [
           {
-            action: "webLink",
-            label: "CSMorning 웹사이트",
-            webLinkUrl: "https://csmorning.co.kr"
-          }
-        ]
+            action: 'webLink',
+            label: 'CSMorning 웹사이트',
+            webLinkUrl: 'https://csmorning.co.kr',
+          },
+        ],
       );
     } else {
       // 계정 연동 코드 생성
-      const linkCode = await webhookService.generateLinkCode(req.prisma, kakaoChannelId);
-      
+      const linkCode = await webhookService.generateLinkCode(
+        req.prisma,
+        kakaoChannelId,
+      );
+
       // 서비스 도메인
-      const serviceDomain = process.env.NODE_ENV === 'production'
-        ? 'https://csmorning.co.kr'
-        : 'http://localhost:5173';
-      
+      const serviceDomain =
+        process.env.NODE_ENV === 'production'
+          ? 'https://csmorning.co.kr'
+          : 'http://localhost:5173';
+
       // 계정 연동이 필요한 경우 - textCard 형식으로 응답
       return createKakaoCardResponse(
-        "CS Morning 계정 연동",
+        'CS Morning 계정 연동',
         `계정 연동 코드가 생성되었습니다.\n\n코드: ${linkCode}\n\n아래 버튼을 통해 CS Morning 웹사이트에서 계정을 연동하세요.\n연동 코드는 10분간 유효합니다.`,
         [
           {
-            action: "webLink",
-            label: "웹사이트에서 연동하기",
-            webLinkUrl: `${serviceDomain}/kakao-link?code=${linkCode}`
+            action: 'webLink',
+            label: '웹사이트에서 연동하기',
+            webLinkUrl: `${serviceDomain}/kakao-link?code=${linkCode}`,
           },
           {
-            action: "webLink",
-            label: "CSMorning 웹사이트",
-            webLinkUrl: "https://csmorning.co.kr"
-          }
-        ]
+            action: 'webLink',
+            label: 'CSMorning 웹사이트',
+            webLinkUrl: 'https://csmorning.co.kr',
+          },
+        ],
       );
     }
   } catch (error) {
@@ -245,19 +257,21 @@ const handleAccountLinkCommand = async (req, user) => {
  * 구독 처리
  */
 const handleSubscriptionCommand = async (req, user, utterance) => {
-  const isUnsubscribe = utterance.includes('취소') || utterance.includes('해지');
-  
+  const isUnsubscribe =
+    utterance.includes('취소') || utterance.includes('해지');
+
   await req.prisma.user.update({
     where: { id: user.id },
     data: { isSubscribed: !isUnsubscribe },
   });
-  
-  const responseText = isUnsubscribe 
-    ? RESPONSE_MESSAGES.UNSUBSCRIBE_SUCCESS 
+
+  const responseText = isUnsubscribe
+    ? RESPONSE_MESSAGES.UNSUBSCRIBE_SUCCESS
     : RESPONSE_MESSAGES.SUBSCRIBE_SUCCESS;
-  
+
   return createKakaoResponse(responseText);
 };
+
 
 /**
  * 카카오톡 챗봇 스킬 메시지 처리
@@ -300,6 +314,20 @@ const handleKakaoMessage = async (req, res, next) => {
       responseBody = await handleAccountLinkCommand(req, user);
     } else if (utterance.includes('구독')) {
       responseBody = await handleSubscriptionCommand(req, user, utterance);
+    } 
+    // 기능 맛보기 관련 명령어 처리 추가
+    else if (utterance.includes('기능 맛보기') || utterance.includes('기능맛보기')) {
+      responseBody = await handleFeaturePreviewCommand(req, user);
+    } else if (utterance.includes('내 정답률')) {
+      responseBody = await handleMyAccuracyCommand(req, user);
+    } else if (utterance.includes('카테고리별 성과')) {
+      responseBody = await handleCategoryPerformanceCommand(req, user);
+    } else if (utterance.includes('내 활동 캘린더') || utterance.includes('활동 캘린더')) {
+      responseBody = await handleActivityCalendarCommand(req, user);
+    } else if (utterance.includes('오늘의 질문 통계') || utterance.includes('질문 통계')) {
+      responseBody = await handleTodayQuestionStatsCommand(req, user);
+    } else if (utterance.includes('최신 토론')) {
+      responseBody = await handleLatestDiscussionsCommand(req, user);
     } else {
       responseBody = createKakaoResponse(RESPONSE_MESSAGES.UNKNOWN_COMMAND);
     }
@@ -323,7 +351,9 @@ const handleAccountLinking = async (req, res, next) => {
     const { userRequest } = req.body;
 
     if (!userRequest || !userRequest.user || !userRequest.user.id) {
-      return res.status(200).json(createKakaoResponse(RESPONSE_MESSAGES.INVALID_REQUEST));
+      return res
+        .status(200)
+        .json(createKakaoResponse(RESPONSE_MESSAGES.INVALID_REQUEST));
     }
 
     const kakaoChannelId = userRequest.user.id;
@@ -342,13 +372,16 @@ const handleAccountLinking = async (req, res, next) => {
 
     // 이미 연동된 계정인 경우
     if (mapping && mapping.user && mapping.user.isTemporary === false) {
-      const responseBody = createKakaoResponse(RESPONSE_MESSAGES.ACCOUNT_LINKED, [
-        {
-          label: '오늘의 질문',
-          action: 'message',
-          messageText: '오늘의 질문',
-        },
-      ]);
+      const responseBody = createKakaoResponse(
+        RESPONSE_MESSAGES.ACCOUNT_LINKED,
+        [
+          {
+            label: '오늘의 질문',
+            action: 'message',
+            messageText: '오늘의 질문',
+          },
+        ],
+      );
 
       res.setHeader('Content-Type', 'application/json; charset=utf-8');
       return res.status(200).json(responseBody);
@@ -380,7 +413,7 @@ const handleAccountLinking = async (req, res, next) => {
           action: 'message',
           messageText: '오늘의 질문',
         },
-      ]
+      ],
     );
 
     res.setHeader('Content-Type', 'application/json; charset=utf-8');
@@ -388,7 +421,162 @@ const handleAccountLinking = async (req, res, next) => {
   } catch (error) {
     console.error('계정 연동 처리 중 오류 발생:', error);
 
-    return res.status(200).json(createKakaoResponse(RESPONSE_MESSAGES.LINK_CODE_ERROR));
+    return res
+      .status(200)
+      .json(createKakaoResponse(RESPONSE_MESSAGES.LINK_CODE_ERROR));
+  }
+};
+
+/**
+ * 기능 맛보기 처리
+ */
+const handleFeaturePreviewCommand = async (req, user) => {
+  try {
+    return createKakaoResponse(
+      RESPONSE_MESSAGES.FEATURE_PREVIEW,
+      QUICK_REPLIES.FEATURE_PREVIEW,
+    );
+  } catch (error) {
+    console.error('기능 맛보기 처리 중 오류:', error);
+    return createKakaoResponse(RESPONSE_MESSAGES.ERROR);
+  }
+};
+
+/**
+ * 내 정답률 확인 처리
+ */
+const handleMyAccuracyCommand = async (req, user) => {
+  try {
+    // 임시 사용자인 경우 계정 연동 필요
+    if (user.isTemporary) {
+      return createKakaoResponse(
+        RESPONSE_MESSAGES.ACCOUNT_LINKING_REQUIRED,
+        QUICK_REPLIES.DEFAULT,
+      );
+    }
+
+    const webhookService = require('./webhook.service');
+    const stats = await webhookService.getUserAccuracyStats(
+      req.prisma,
+      user.id,
+    );
+
+    return createKakaoResponse(
+      RESPONSE_MESSAGES.MY_ACCURACY(
+        stats.totalAnswered,
+        stats.correctAnswers,
+        stats.accuracy,
+      ),
+      QUICK_REPLIES.AFTER_FEATURE,
+    );
+  } catch (error) {
+    console.error('내 정답률 확인 처리 중 오류:', error);
+    return createKakaoResponse(RESPONSE_MESSAGES.ERROR);
+  }
+};
+
+/**
+ * 카테고리별 성과 확인 처리
+ */
+const handleCategoryPerformanceCommand = async (req, user) => {
+  try {
+    // 임시 사용자인 경우 계정 연동 필요
+    if (user.isTemporary) {
+      return createKakaoResponse(
+        RESPONSE_MESSAGES.ACCOUNT_LINKING_REQUIRED,
+        QUICK_REPLIES.DEFAULT,
+      );
+    }
+
+    const webhookService = require('./webhook.service');
+    const categoryStats = await webhookService.getUserCategoryPerformance(
+      req.prisma,
+      user.id,
+    );
+
+    return createKakaoResponse(
+      RESPONSE_MESSAGES.CATEGORY_PERFORMANCE(categoryStats),
+      QUICK_REPLIES.AFTER_FEATURE,
+    );
+  } catch (error) {
+    console.error('카테고리별 성과 확인 처리 중 오류:', error);
+    return createKakaoResponse(RESPONSE_MESSAGES.ERROR);
+  }
+};
+
+/**
+ * 내 활동 캘린더 확인 처리
+ */
+const handleActivityCalendarCommand = async (req, user) => {
+  try {
+    // 임시 사용자인 경우 계정 연동 필요
+    if (user.isTemporary) {
+      return createKakaoResponse(
+        RESPONSE_MESSAGES.ACCOUNT_LINKING_REQUIRED,
+        QUICK_REPLIES.DEFAULT,
+      );
+    }
+
+    const webhookService = require('./webhook.service');
+    const activityStats = await webhookService.getUserActivityStats(
+      req.prisma,
+      user.id,
+    );
+
+    return createKakaoResponse(
+      RESPONSE_MESSAGES.ACTIVITY_CALENDAR(
+        activityStats.totalDays,
+        activityStats.longestStreak,
+        activityStats.currentStreak,
+      ),
+      QUICK_REPLIES.AFTER_FEATURE,
+    );
+  } catch (error) {
+    console.error('내 활동 캘린더 확인 처리 중 오류:', error);
+    return createKakaoResponse(RESPONSE_MESSAGES.ERROR);
+  }
+};
+
+/**
+ * 오늘의 질문 통계 확인 처리
+ */
+const handleTodayQuestionStatsCommand = async (req, user) => {
+  try {
+    const webhookService = require('./webhook.service');
+    const questionStats = await webhookService.getTodayQuestionStats(
+      req.prisma,
+    );
+
+    return createKakaoResponse(
+      RESPONSE_MESSAGES.TODAY_QUESTION_STATS(
+        questionStats.totalResponses,
+        questionStats.correctResponses,
+        questionStats.accuracy,
+        questionStats.mostCommonWrong,
+      ),
+      QUICK_REPLIES.AFTER_FEATURE,
+    );
+  } catch (error) {
+    console.error('오늘의 질문 통계 확인 처리 중 오류:', error);
+    return createKakaoResponse(RESPONSE_MESSAGES.ERROR);
+  }
+};
+
+/**
+ * 최신 토론 확인 처리
+ */
+const handleLatestDiscussionsCommand = async (req, user) => {
+  try {
+    const webhookService = require('./webhook.service');
+    const discussions = await webhookService.getLatestDiscussions(req.prisma);
+
+    return createKakaoResponse(
+      RESPONSE_MESSAGES.LATEST_DISCUSSIONS(discussions),
+      QUICK_REPLIES.AFTER_FEATURE,
+    );
+  } catch (error) {
+    console.error('최신 토론 확인 처리 중 오류:', error);
+    return createKakaoResponse(RESPONSE_MESSAGES.ERROR);
   }
 };
 
@@ -405,4 +593,11 @@ module.exports = {
   handleKakaoMessage,
   testEndpoint,
   handleAccountLinking,
+  handleFeaturePreviewCommand,
+  handleMyAccuracyCommand,
+  handleCategoryPerformanceCommand,
+  handleActivityCalendarCommand,
+  handleTodayQuestionStatsCommand,
+  handleLatestDiscussionsCommand,
+  handleSubscriptionCommand,
 };
