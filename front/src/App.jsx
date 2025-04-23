@@ -48,8 +48,6 @@ function App() {
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/kakao/callback" element={<KakaoCallbackPage />} />
 
-        {/* <Route path="/kakao-callback" element={<KakaoCallbackPage />} /> */}
-
         <Route path="/terms" element={<TermsPage />} />
         <Route path="/privacy" element={<PrivacyContentPage />} />
         <Route path="/kakao-link" element={<KakaoLinkPage />} />
