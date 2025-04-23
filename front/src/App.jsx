@@ -48,6 +48,10 @@ function App() {
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/kakao/callback" element={<KakaoCallbackPage />} />
 
+        {/* 카카오 싱크 로그인 페이지 */}
+        <Route path="/kakao-sync-success" element={<KakaoCallbackPage />} />
+
+
         <Route path="/terms" element={<TermsPage />} />
         <Route path="/privacy" element={<PrivacyContentPage />} />
         <Route path="/kakao-link" element={<KakaoLinkPage />} />

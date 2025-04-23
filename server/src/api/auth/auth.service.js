@@ -301,13 +301,18 @@ const updateUserPremium = async (userId, isPremium, premiumPlan) => {
 async function findOrCreateKakaoUser(userInfo) {
   const kakaoId = userInfo.id.toString();
   
+  console.log('카카오 싱크 사용자 정보 처리:', { 
+    kakaoId, 
+    hasKakaoAccount: !!userInfo.kakao_account 
+  });
+  
   // 기존 사용자 찾기
   let user = await prisma.user.findFirst({
     where: { kakaoId }
   });
   
   if (!user) {
-    const kakaoAccount = userResponse.data.kakao_account;
+    const kakaoAccount = userInfo.kakao_account || {};
     
     // 생일 처리 (MMDD 형식을 Date 객체로 변환)
     let birthDate = null;
@@ -318,25 +323,52 @@ async function findOrCreateKakaoUser(userInfo) {
       birthDate = new Date(year, month - 1, day);
     }
     
+    // 사용자 생성 데이터 준비
+    const userData = {
+      kakaoId: kakaoId.toString(),
+      nickname: kakaoAccount.profile?.nickname || `사용자${Math.floor(1000 + Math.random() * 9000)}`,
+      profileImage: kakaoAccount.profile?.thumbnail_image_url,
+      email: kakaoAccount.has_email === true ? kakaoAccount.email : null,
+      gender: kakaoAccount.has_gender === true ? kakaoAccount.gender : null,
+      ageGroup: kakaoAccount.has_age_range === true ? kakaoAccount.age_range : null,
+      birthDate: birthDate,
+      birthYear: kakaoAccount.birthyear ? parseInt(kakaoAccount.birthyear) : null,
+      phoneNumber: kakaoAccount.has_phone_number === true ? kakaoAccount.phone_number : null,
+      isSubscribed: true,
+      role: 'user'
+    };
+    
+    console.log('카카오 싱크 신규 사용자 생성 데이터:', userData);
+    
+    // 사용자 생성
     user = await prisma.user.create({
-      data: {
-        kakaoId: kakaoId.toString(),
-        nickname: kakaoAccount.profile?.nickname || `사용자${Math.floor(1000 + Math.random() * 9000)}`,
-        profileImage: kakaoAccount.profile?.thumbnail_image_url,
-        email: kakaoAccount.email,
-        gender: kakaoAccount.gender,
-        ageGroup: kakaoAccount.age_range,
-        birthDate: birthDate,
-        birthYear: kakaoAccount.birthyear ? parseInt(kakaoAccount.birthyear) : null,
-        phoneNumber: kakaoAccount.phone_number,
-        isSubscribed: true,
-        role: 'user'
-      }
+      data: userData
     });
     
-    console.log('카카오 사용자 신규 생성:', user.id);
+    console.log('카카오 싱크 사용자 신규 생성:', user.id);
   } else {
     console.log('기존 카카오 사용자 발견:', user.id);
+    
+    // 기존 사용자 정보 업데이트 (선택 사항)
+    const kakaoAccount = userInfo.kakao_account || {};
+    const updateData = {};
+    
+    if (kakaoAccount.profile?.thumbnail_image_url) {
+      updateData.profileImage = kakaoAccount.profile.thumbnail_image_url;
+    }
+    
+    if (kakaoAccount.has_email === true && kakaoAccount.email && !user.email) {
+      updateData.email = kakaoAccount.email;
+    }
+    
+    // 업데이트할 내용이 있는 경우에만 업데이트 수행
+    if (Object.keys(updateData).length > 0) {
+      user = await prisma.user.update({
+        where: { id: user.id },
+        data: updateData
+      });
+      console.log('카카오 싱크 사용자 정보 업데이트 완료:', user.id);
+    }
   }
   
   return user;

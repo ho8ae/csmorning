@@ -113,6 +113,7 @@ const handleKakaoSyncCallback = async (req, res) => {
       return res.status(400).json({ message: 'code 또는 continue URL 누락' });
     }
 
+    // 토큰 받기
     const tokenResponse = await kakaoService.getToken(code);
     console.log('카카오 토큰 응답:', tokenResponse);
 
@@ -120,18 +121,54 @@ const handleKakaoSyncCallback = async (req, res) => {
       return res.status(500).json({ message: '카카오 토큰 요청 실패' });
     }
 
-    const { access_token } = tokenResponse;
+    const { access_token, refresh_token } = tokenResponse;
 
+    // 카카오 사용자 정보 및 동의 항목 가져오기
     const userInfo = await kakaoService.getUserInfo(access_token);
     const agreements = await kakaoService.getAgreements(access_token);
+    
+    console.log('카카오 싱크 사용자 정보:', {
+      id: userInfo.id,
+      has_account: !!userInfo.kakao_account,
+      connected_at: userInfo.connected_at
+    });
+    
+    console.log('카카오 싱크 동의 항목:', agreements);
+    
+    // 사용자 찾거나 생성
     const user = await authService.findOrCreateKakaoUser(userInfo);
-
-    return res.redirect(302, continueUrl);
+    
+    // JWT 토큰 생성
+    const token = generateToken({ userId: user.id });
+    
+    // 쿠키에 토큰 저장 (선택 사항)
+    // res.cookie('auth_token', token, {
+    //   httpOnly: true, // 클라이언트 JavaScript에서 접근 불가
+    //   secure: process.env.NODE_ENV === 'production', // HTTPS에서만 전송
+    //   maxAge: 7 * 24 * 60 * 60 * 1000, // 7일
+    //   sameSite: 'lax' // CSRF 보호
+    // });
+    
+    // 리다이렉트 URL에 토큰 및 사용자 ID 추가 (프론트엔드에서 처리할 수 있도록)
+    const redirectWithParams = `${continueUrl}?auth_token=${token}&user_id=${user.id}`;
+    
+    // 클라이언트로 리다이렉트
+    return res.redirect(302, redirectWithParams);
   } catch (error) {
     console.error('카카오 싱크 콜백 처리 실패:', error);
-    res
-      .status(500)
-      .json({ message: '카카오 싱크 처리 중 오류가 발생했습니다.' });
+    
+    // 에러 로깅 강화
+    if (error.response) {
+      console.error('에러 응답 데이터:', error.response.data);
+      console.error('에러 응답 상태:', error.response.status);
+    }
+    
+    // 에러 발생 시 에러 페이지로 리다이렉트 (선택 사항)
+    const errorRedirect = req.query.continue 
+      ? `${req.query.continue}?error=auth_failed`
+      : '/error?message=kakao_sync_failed';
+      
+    return res.redirect(302, errorRedirect);
   }
 };
 

@@ -307,14 +307,22 @@ async function initializeToken() {
 }
 
 
-
 /**
  * 인가 코드로 토큰 받기
  * @param {string} code - 인가 코드
+ * @param {string} redirectUri - 리다이렉트 URI (선택적)
  * @returns {Promise<object>} 토큰 정보
  */
-async function getToken(code) {
+async function getToken(code, redirectUri = null) {
   try {
+    // 리다이렉트 URI 설정
+    const redirect = redirectUri || `${process.env.SERVICE_URL}/api/auth/kakao/sync-callback`;
+    
+    console.log('카카오 토큰 요청:', { 
+      code: code.substring(0, 10) + '...',
+      redirect_uri: redirect 
+    });
+    
     const response = await axios({
       method: 'post',
       url: `${KAKAO_AUTH_URL}/oauth/token`,
@@ -324,14 +332,30 @@ async function getToken(code) {
       data: qs.stringify({
         grant_type: 'authorization_code',
         client_id: process.env.KAKAO_REST_API_KEY,
-        redirect_uri: `${process.env.SERVICE_URL}/api/auth/kakao/sync-callback`,
+        redirect_uri: redirect,
         code: code
       })
     });
     
+    console.log('카카오 토큰 응답 성공:', {
+      access_token: response.data.access_token ? '발급됨' : '실패',
+      expires_in: response.data.expires_in,
+      token_type: response.data.token_type
+    });
+    
     return response.data;
   } catch (error) {
-    console.error('카카오 토큰 받기 실패:', error.response?.data || error.message);
+    console.error('카카오 토큰 받기 실패:', error.message);
+    
+    // 자세한 에러 로깅
+    if (error.response) {
+      console.error('에러 응답 데이터:', error.response.data);
+      console.error('에러 응답 상태:', error.response.status);
+      console.error('에러 응답 헤더:', error.response.headers);
+    } else if (error.request) {
+      console.error('요청이 전송되었지만 응답이 없음:', error.request);
+    }
+    
     throw error;
   }
 }
