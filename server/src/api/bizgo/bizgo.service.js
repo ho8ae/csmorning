@@ -500,8 +500,17 @@ async function sendDailyQuestionToAllSubscribers(prisma) {
     for (const user of subscribers) {
       try {
         if (user.phoneNumber) {
-          // 전화번호 형식 정리 (하이픈 제거)
-          const phoneNumber = user.phoneNumber.replace(/-/g, '');
+          // 전화번호 형식 정리: 공백 제거, 하이픈 제거, 국제번호(+82) 처리
+          let phoneNumber = user.phoneNumber
+            .replace(/\s+/g, '')
+            .replace(/-/g, '');
+
+          // +82로 시작하는 경우 처리 (예: +82 10-9789-7457 → 01097897457)
+          if (phoneNumber.startsWith('+82')) {
+            // +82 제거하고 앞에 0 추가
+            phoneNumber = '0' + phoneNumber.substring(3);
+          }
+
           const userName = user.nickname || '고객';
 
           // 알림톡 전송
