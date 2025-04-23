@@ -33,4 +33,7 @@ router.post('/link-kakao-channel', isAuthenticated, authController.linkKakaoChan
 // 프리미엄 상태 업데이트
 router.post('/update-premium', isAuthenticated, validate(authValidation.updatePremiumSchema), authController.updatePremium);
 
+// 카카오 계정 변동 웹훅
+router.post('/webhook/kakao', authController.handleKakaoWebhook);
+
 module.exports = router;
