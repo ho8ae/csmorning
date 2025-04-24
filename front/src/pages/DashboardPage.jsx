@@ -89,7 +89,8 @@ const DashboardPage = () => {
     <div className="flex flex-col min-h-screen bg-gray-50">
       <Navbar />
 
-      <div className="container flex flex-col flex-grow px-4 py-8 mx-auto md:px-6">
+      <div className="container flex flex-col flex-grow px-4 py-8 mx-auto md:px-6 pt-24">
+        
         {/* 헤더 */}
         <DashboardHeader user={user} error={error} />
 

@@ -101,7 +101,7 @@ const CheckoutPage = () => {
     <div className="bg-gray-50 min-h-screen">
       <Navbar />
       
-      <main className="py-10">
+      <main className="py-10 pt-32">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-10">
             <motion.h1 

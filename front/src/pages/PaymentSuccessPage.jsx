@@ -13,7 +13,7 @@ const PaymentSuccessPage = () => {
     <div className="bg-white min-h-screen">
       <Navbar />
       
-      <main className="py-16">
+      <main className="py-16 pt-32">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <motion.div
             initial={{ opacity: 0, scale: 0.8 }}
