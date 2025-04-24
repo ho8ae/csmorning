@@ -1,8 +1,13 @@
 import { useState, useEffect } from 'react';
-import { usersAPI } from '../../services/api';
+import { usersAPI, authAPI } from '../../services/api';
 import Sidebar from '../../components/admin/Sidebar';
-import { motion } from 'framer-motion'; // eslint-disable-line no-unused-vars
-import { FiSearch, FiMail, FiSmile, FiMusic, FiMinusCircle} from 'react-icons/fi';
+import { motion, AnimatePresence } from 'framer-motion'; // eslint-disable-line no-unused-vars
+
+// 분리된 컴포넌트들 가져오기
+import UserSearchFilter from '../../components/admin/UserSearchFilter';
+import UsersTable from '../../components/admin/UserTable';
+import Pagination from '../../components/admin/Pagination';
+import UserDetailPanel from '../../components/admin/UserDetailPanel';
 
 const UsersListPage = () => {
   const [users, setUsers] = useState([]);
@@ -10,12 +15,17 @@ const UsersListPage = () => {
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filter, setFilter] = useState({
-    isSubscribed: ''
+    isSubscribed: '',
+    isPremium: '',
+    isActive: ''
   });
   
   // 페이지네이션
   const [currentPage, setCurrentPage] = useState(1);
   const usersPerPage = 10;
+  
+  // 선택된 사용자 (상세 패널에 표시할)
+  const [selectedUser, setSelectedUser] = useState(null);
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -39,12 +49,15 @@ const UsersListPage = () => {
     const searchFields = [
       user.nickname || '',
       user.kakaoId || '',
-      user.email || ''
+      user.email || '',
+      user.name || ''
     ].map(field => field.toLowerCase());
     
     return (
       searchFields.some(field => field.includes(searchTerm.toLowerCase())) &&
-      (filter.isSubscribed === '' || user.isSubscribed.toString() === filter.isSubscribed)
+      (filter.isSubscribed === '' || user.isSubscribed.toString() === filter.isSubscribed) &&
+      (filter.isPremium === '' || user.isPremium?.toString() === filter.isPremium) &&
+      (filter.isActive === '' || (user.isActive !== undefined ? user.isActive.toString() : 'true') === filter.isActive)
     );
   });
 
@@ -54,12 +67,49 @@ const UsersListPage = () => {
   const currentUsers = filteredUsers.slice(indexOfFirstUser, indexOfLastUser);
   const totalPages = Math.ceil(filteredUsers.length / usersPerPage);
 
-  const paginate = (pageNumber) => setCurrentPage(pageNumber);
+  // 페이지 변경 핸들러
+  const handlePageChange = (pageNumber) => {
+    setCurrentPage(pageNumber);
+  };
 
+  // 사용자 선택 핸들러
+  const handleSelectUser = (userId) => {
+    const user = users.find(u => u.id === userId);
+    setSelectedUser(user);
+  };
+
+  // 사용자 업데이트 핸들러
+  const handleUpdateUser = async (userId, userData) => {
+    try {
+      // API 호출로 사용자 정보 업데이트
+      const updatedUser = await usersAPI.update(userId, userData);
+      
+      // 사용자 목록 갱신
+      setUsers(users.map(user => 
+        user.id === userId ? { ...user, ...updatedUser } : user
+      ));
+      
+      // 선택된 사용자도 업데이트
+      setSelectedUser(prevUser => 
+        prevUser && prevUser.id === userId ? { ...prevUser, ...updatedUser } : prevUser
+      );
+      
+      alert('사용자 정보가 성공적으로 업데이트되었습니다.');
+    } catch (error) {
+      console.error('사용자 정보 업데이트 중 오류:', error);
+      alert('사용자 정보 업데이트 중 오류가 발생했습니다: ' + (error.response?.data?.message || error.message));
+    }
+  };
+
+  // 구독 상태 변경
   const handleToggleSubscription = async (userId, isCurrentlySubscribed) => {
     try {
-      // 실제 환경에서는 API 호출을 통해 구독 상태를 변경
-      await usersAPI.update(userId, { isSubscribed: !isCurrentlySubscribed });
+      if (!window.confirm(`사용자의 구독 상태를 ${isCurrentlySubscribed ? '취소' : '활성화'}로 변경하시겠습니까?`)) {
+        return;
+      }
+      
+      // API 호출로 구독 상태 변경
+      await usersAPI.toggleSubscription(userId, isCurrentlySubscribed);
       
       // 사용자 목록 갱신
       setUsers(users.map(user => 
@@ -67,9 +117,139 @@ const UsersListPage = () => {
           ? { ...user, isSubscribed: !isCurrentlySubscribed } 
           : user
       ));
+      
+      // 선택된 사용자도 업데이트
+      setSelectedUser(prevUser => 
+        prevUser && prevUser.id === userId 
+          ? { ...prevUser, isSubscribed: !isCurrentlySubscribed } 
+          : prevUser
+      );
     } catch (error) {
       console.error('구독 상태 변경 중 오류:', error);
       alert('구독 상태를 변경하는 중 오류가 발생했습니다.');
+    }
+  };
+
+  // 프리미엄 상태 변경
+  const handleTogglePremium = async (userId, isCurrentlyPremium) => {
+    try {
+      if (!window.confirm(`사용자의 프리미엄 상태를 ${isCurrentlyPremium ? '비활성화' : '활성화'}로 변경하시겠습니까?`)) {
+        return;
+      }
+      
+      let durationMonths = 1;
+      if (!isCurrentlyPremium) {
+        const durationInput = prompt('프리미엄 기간을 개월 수로 입력하세요 (기본: 1개월)', '1');
+        durationMonths = parseInt(durationInput) || 1;
+        if (durationMonths <= 0) {
+          alert('유효한 개월 수를 입력해주세요.');
+          return;
+        }
+      }
+      
+      // API 호출로 프리미엄 상태 변경
+      await usersAPI.updatePremium(userId, !isCurrentlyPremium, durationMonths);
+      
+      // 현재 날짜에 개월 수를 더한 만료일 계산
+      let premiumUntil = null;
+      if (!isCurrentlyPremium) {
+        premiumUntil = new Date();
+        premiumUntil.setMonth(premiumUntil.getMonth() + durationMonths);
+      }
+      
+      // 사용자 목록 갱신
+      setUsers(users.map(user => 
+        user.id === userId 
+          ? { 
+              ...user, 
+              isPremium: !isCurrentlyPremium,
+              premiumUntil: !isCurrentlyPremium ? premiumUntil : null
+            } 
+          : user
+      ));
+      
+      // 선택된 사용자도 업데이트
+      setSelectedUser(prevUser => 
+        prevUser && prevUser.id === userId 
+          ? { 
+              ...prevUser, 
+              isPremium: !isCurrentlyPremium,
+              premiumUntil: !isCurrentlyPremium ? premiumUntil : null
+            } 
+          : prevUser
+      );
+    } catch (error) {
+      console.error('프리미엄 상태 변경 중 오류:', error);
+      alert('프리미엄 상태를 변경하는 중 오류가 발생했습니다.');
+    }
+  };
+
+  // 카카오 연결 해제
+  const handleUnlinkKakao = async (userId, kakaoId) => {
+    try {
+      if (!kakaoId) {
+        alert('카카오 ID가 없습니다.');
+        return;
+      }
+      
+      if (!window.confirm('이 사용자의 카카오 계정 연결을 해제하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) {
+        return;
+      }
+      
+      // API 호출로 카카오 연결 해제
+      await authAPI.unlinkKakaoUser(kakaoId);
+      
+      // 사용자 목록 갱신
+      setUsers(users.map(user => 
+        user.id === userId 
+          ? { ...user, kakaoId: null } 
+          : user
+      ));
+      
+      // 선택된 사용자도 업데이트
+      setSelectedUser(prevUser => 
+        prevUser && prevUser.id === userId 
+          ? { ...prevUser, kakaoId: null } 
+          : prevUser
+      );
+      
+      alert('카카오 계정 연결이 성공적으로 해제되었습니다.');
+    } catch (error) {
+      console.error('카카오 연결 해제 중 오류:', error);
+      alert('카카오 연결 해제 중 오류가 발생했습니다: ' + (error.response?.data?.message || error.message));
+    }
+  };
+
+  // 계정 상태 변경 (활성화/비활성화)
+  const handleToggleAccountStatus = async (userId, isCurrentlyActive) => {
+    try {
+      const statusText = isCurrentlyActive ? '비활성화' : '활성화';
+      
+      if (!window.confirm(`이 사용자의 계정을 ${statusText}하시겠습니까?`)) {
+        return;
+      }
+      
+      // API 호출로 계정 상태 변경
+      await usersAPI.toggleAccountStatus(userId, !isCurrentlyActive);
+      
+      // 사용자 목록 갱신
+      setUsers(users.map(user => 
+        user.id === userId 
+          ? { ...user, isActive: !isCurrentlyActive } 
+          : user
+      ));
+      
+      // 선택된 사용자도 업데이트
+      setSelectedUser(prevUser => 
+        prevUser && prevUser.id === userId 
+          ? { ...prevUser, isActive: !isCurrentlyActive } 
+          : prevUser
+      );
+      
+      alert(`사용자 계정이 성공적으로 ${statusText}되었습니다.`);
+    } catch (error) {
+      console.error('계정 상태 변경 중 오류:', error);
+      alert('계정 상태 변경 중 오류가 발생했습니다: ' + (error.response?.data?.message || error.message));
     }
   };
 
@@ -91,7 +271,8 @@ const UsersListPage = () => {
     <div className="flex min-h-screen bg-gray-100">
       <Sidebar />
       
-      <div className="flex-1 p-6 ml-64">
+      <div className={`flex-1 p-6 ml-64 ${selectedUser ? 'mr-96' : ''}`}>
+        {/* 헤더 */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -102,6 +283,7 @@ const UsersListPage = () => {
           <p className="text-gray-600">총 {filteredUsers.length}명의 사용자가 있습니다.</p>
         </motion.div>
         
+        {/* 오류 메시지 */}
         {error && (
           <div className="p-4 mb-6 text-red-700 bg-red-100 rounded-lg">
             {error}
@@ -109,188 +291,47 @@ const UsersListPage = () => {
         )}
         
         {/* 검색 및 필터 */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-          className="mb-6 bg-white p-4 rounded-lg shadow-md"
-        >
-          <div className="flex flex-wrap gap-4">
-            {/* 검색 */}
-            <div className="flex-1 min-w-[300px]">
-              <div className="relative">
-                <FiSearch className="absolute left-3 top-3 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="사용자 검색 (닉네임, 카카오 ID, 이메일)..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-            </div>
-            
-            {/* 구독 상태 필터 */}
-            <div className="w-full sm:w-auto">
-              <select
-                value={filter.isSubscribed}
-                onChange={(e) => setFilter({...filter, isSubscribed: e.target.value})}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">모든 구독 상태</option>
-                <option value="true">구독중</option>
-                <option value="false">구독취소</option>
-              </select>
-            </div>
-          </div>
-        </motion.div>
+        <UserSearchFilter 
+          searchTerm={searchTerm} 
+          setSearchTerm={setSearchTerm} 
+          filter={filter} 
+          setFilter={setFilter}
+        />
         
-        {/* 사용자 목록 */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-          className="bg-white rounded-lg shadow-md overflow-hidden"
-        >
-          {currentUsers.length > 0 ? (
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      닉네임
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      카카오 ID
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      통계
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      구독 상태
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      가입일
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      작업
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {currentUsers.map((user) => (
-                    <tr key={user.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4">
-                        <div className="flex items-center">
-                          <div className="flex-shrink-0 h-10 w-10 bg-gray-200 rounded-full flex items-center justify-center">
-                            {user.profileImage ? (
-                              <img src={user.profileImage} alt={user.nickname} className="h-10 w-10 rounded-full" />
-                            ) : (
-                              <FiSmile className="h-6 w-6 text-gray-500" />
-                            )}
-                          </div>
-                          <div className="ml-4">
-                            <div className="text-sm font-medium text-gray-900">
-                              {user.nickname || '이름 없음'}
-                            </div>
-                            <div className="text-sm text-gray-500">
-                              {user.email || '이메일 없음'}
-                            </div>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="text-sm text-gray-900">{user.kakaoId || '-'}</div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="text-sm text-gray-900">
-                          답변: {user.totalAnswered || 0}
-                        </div>
-                        <div className="text-sm text-gray-900">
-                          정답: {user.correctAnswers || 0}
-                        </div>
-                        <div className="text-sm text-gray-500">
-                          {user.totalAnswered > 0 
-                            ? `정확도: ${Math.round((user.correctAnswers / user.totalAnswered) * 100)}%` 
-                            : '-'}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${user.isSubscribed ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                          {user.isSubscribed ? '구독중' : '구독취소'}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="text-sm text-gray-900">
-                          {new Date(user.createdAt).toLocaleDateString()}
-                        </div>
-                        <div className="text-sm text-gray-500">
-                          {new Date(user.createdAt).toLocaleTimeString()}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 text-right text-sm font-medium">
-                        <button
-                          onClick={() => window.confirm(`${user.nickname || '이 사용자'}에게 이메일을 보내시겠습니까?`)}
-                          className="text-blue-600 hover:text-blue-900 mr-3"
-                          title="이메일 보내기"
-                          disabled={!user.email}
-                        >
-                          <FiMail />
-                        </button>
-                        <button
-                          onClick={() => handleToggleSubscription(user.id, user.isSubscribed)}
-                          className={`${user.isSubscribed ? 'text-red-600 hover:text-red-900' : 'text-green-600 hover:text-green-900'}`}
-                          title={user.isSubscribed ? '구독 취소' : '구독 활성화'}
-                        >
-                          {user.isSubscribed ? <FiMinusCircle /> : <FiMusic />}
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <div className="p-6 text-center text-gray-500">
-              {filteredUsers.length === 0 && users.length > 0 ? 
-                '검색 조건에 맞는 사용자가 없습니다.' : 
-                '등록된 사용자가 없습니다.'}
-            </div>
-          )}
-        </motion.div>
+        {/* 사용자 목록 테이블 */}
+        <UsersTable 
+          users={currentUsers}
+          onToggleSubscription={handleToggleSubscription}
+          onTogglePremium={handleTogglePremium}
+          onUnlinkKakao={handleUnlinkKakao}
+          onToggleAccountStatus={handleToggleAccountStatus}
+          onSelectUser={handleSelectUser}
+        />
         
         {/* 페이지네이션 */}
-        {totalPages > 1 && (
-          <div className="flex justify-center mt-6">
-            <nav className="flex items-center">
-              <button
-                onClick={() => paginate(Math.max(1, currentPage - 1))}
-                disabled={currentPage === 1}
-                className="px-3 py-1 rounded-md bg-gray-200 text-gray-700 mr-2 disabled:opacity-50"
-              >
-                이전
-              </button>
-              
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map(number => (
-                <button
-                  key={number}
-                  onClick={() => paginate(number)}
-                  className={`px-3 py-1 mx-1 rounded-md ${currentPage === number ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}
-                >
-                  {number}
-                </button>
-              ))}
-              
-              <button
-                onClick={() => paginate(Math.min(totalPages, currentPage + 1))}
-                disabled={currentPage === totalPages}
-                className="px-3 py-1 rounded-md bg-gray-200 text-gray-700 ml-2 disabled:opacity-50"
-              >
-                다음
-              </button>
-            </nav>
+        <Pagination 
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={handlePageChange}
+        />
+        
+        {/* 검색 결과 없음 메시지 */}
+        {filteredUsers.length === 0 && users.length > 0 && (
+          <div className="mt-6 p-4 text-center text-amber-700 bg-amber-100 rounded-lg">
+            검색 조건에 맞는 사용자가 없습니다.
           </div>
         )}
+        
+        {/* 사용자 상세 패널 */}
+        <AnimatePresence>
+          {selectedUser && (
+            <UserDetailPanel 
+              user={selectedUser}
+              onClose={() => setSelectedUser(null)}
+              onUpdate={handleUpdateUser}
+            />
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );

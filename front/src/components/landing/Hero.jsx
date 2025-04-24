@@ -56,7 +56,7 @@ const Hero = () => {
                 to={'/login'}
                 className="bg-yellow-400 hover:bg-yellow-500 text-blue-900 font-bold py-3 px-8 rounded-full shadow-lg transition duration-300 transform hover:scale-105 font-['ChosunGu'] "
               >
-                대시보드
+                시작하기
               </Link>
             )}
           </motion.div>

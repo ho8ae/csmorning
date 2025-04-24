@@ -63,11 +63,9 @@ export const authAPI = {
 
   // 카카오 로그인
   kakaoLogin: async (code) => {
-    // console.log('카카오 API 호출:', code);
     try {
       // GET 방식으로 변경
       const response = await apiClient.get('/auth/kakao', { params: { code } });
-      // console.log('카카오 로그인 응답:', response.data);
       return response.data.data;
     } catch (error) {
       console.error('카카오 API 에러:', error.response?.data || error.message);
@@ -94,6 +92,12 @@ export const authAPI = {
       premiumPlan
     });
     return response.data.data;
+  },
+  
+  // 카카오 계정 연결 해제 (관리자용)
+  unlinkKakaoUser: async (kakaoId) => {
+    const response = await apiClient.post('/auth/admin/unlink-kakao-user', { kakaoId });
+    return response.data;
   }
 };
 
@@ -145,6 +149,30 @@ export const usersAPI = {
     const response = await apiClient.put(`/admin/users/${id}`, userData);
     return response.data.data;
   },
+  toggleSubscription: async (id, isSubscribed) => {
+    const response = await apiClient.patch(`/admin/users/${id}/subscription`, { 
+      isSubscribed: !isSubscribed 
+    });
+    return response.data.data;
+  },
+  updatePremium: async (id, isPremium, durationMonths = 1) => {
+    const response = await apiClient.patch(`/admin/users/${id}/premium`, { 
+      isPremium,
+      durationMonths
+    });
+    return response.data.data;
+  },
+  unlinkKakao: async (id) => {
+    const response = await apiClient.post(`/admin/users/${id}/unlink-kakao`);
+    return response.data;
+  },
+  // 계정 상태 변경 (활성화/비활성화)
+  toggleAccountStatus: async (id, isActive) => {
+    const response = await apiClient.patch(`/admin/users/${id}/status`, { 
+      isActive 
+    });
+    return response.data.data;
+  }
 };
 
 // 기부 관련 API

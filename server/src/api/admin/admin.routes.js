@@ -10,8 +10,16 @@ router.use(authAdmin);  // isAuthenticated와 isAdmin을 함께 체크하는 미
 
 // 사용자 관리
 router.get('/users', adminController.getAllUsers);
+router.get('/users/:id', adminController.getUserById);
+router.put('/users/:id', validate(adminValidation.updateUserSchema), adminController.updateUser);
 
-//
+// 사용자 상태 관리 API
+router.patch('/users/:id/subscription', validate(adminValidation.toggleSubscriptionSchema), adminController.toggleUserSubscription);
+router.patch('/users/:id/premium', validate(adminValidation.updatePremiumSchema), adminController.updateUserPremium);
+router.patch('/users/:id/status', validate(adminValidation.toggleStatusSchema), adminController.toggleUserStatus);
+router.post('/users/:id/unlink-kakao', adminController.unlinkUserKakao);
+
+// 카카오 토큰 설정
 router.post('/kakao-tokens', adminController.setKakaoTokens);
 
 // 응답 통계

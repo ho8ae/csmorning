@@ -110,10 +110,173 @@ const setKakaoTokens = async (req, res, next) => {
   }
 };
 
+/**
+ * 특정 사용자 정보 조회
+ */
+const getUserById = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    
+    const user = await adminService.getUserById(req.prisma, parseInt(id));
+    
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: '사용자를 찾을 수 없습니다.'
+      });
+    }
+    
+    res.json({ success: true, data: user });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * 사용자 정보 업데이트
+ */
+const updateUser = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const userData = req.body;
+    
+    const updatedUser = await adminService.updateUser(req.prisma, parseInt(id), userData);
+    
+    res.json({ 
+      success: true, 
+      message: '사용자 정보가 성공적으로 업데이트되었습니다.',
+      data: updatedUser 
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * 사용자 구독 상태 변경
+ */
+const toggleUserSubscription = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { isSubscribed } = req.body;
+    
+    if (isSubscribed === undefined) {
+      return res.status(400).json({
+        success: false,
+        message: 'isSubscribed 필드가 필요합니다.'
+      });
+    }
+    
+    const updatedUser = await adminService.updateUserSubscription(
+      req.prisma, 
+      parseInt(id), 
+      isSubscribed
+    );
+    
+    res.json({ 
+      success: true, 
+      message: `사용자 구독 상태가 ${isSubscribed ? '활성화' : '비활성화'}되었습니다.`,
+      data: updatedUser 
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * 사용자 프리미엄 상태 변경
+ */
+const updateUserPremium = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { isPremium, durationMonths } = req.body;
+    
+    if (isPremium === undefined) {
+      return res.status(400).json({
+        success: false,
+        message: 'isPremium 필드가 필요합니다.'
+      });
+    }
+    
+    const duration = parseInt(durationMonths) || 1;
+    
+    const updatedUser = await adminService.updateUserPremiumStatus(
+      req.prisma, 
+      parseInt(id), 
+      isPremium,
+      duration
+    );
+    
+    res.json({ 
+      success: true, 
+      message: `사용자 프리미엄 상태가 ${isPremium ? '활성화' : '비활성화'}되었습니다.`,
+      data: updatedUser 
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * 사용자 계정 상태 변경 (활성화/비활성화)
+ */
+const toggleUserStatus = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { isActive } = req.body;
+    
+    if (isActive === undefined) {
+      return res.status(400).json({
+        success: false,
+        message: 'isActive 필드가 필요합니다.'
+      });
+    }
+    
+    const updatedUser = await adminService.updateUserStatus(
+      req.prisma, 
+      parseInt(id), 
+      isActive
+    );
+    
+    res.json({ 
+      success: true, 
+      message: `사용자 계정이 ${isActive ? '활성화' : '비활성화'}되었습니다.`,
+      data: updatedUser 
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * 사용자 카카오 연결 해제
+ */
+const unlinkUserKakao = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    
+    const result = await adminService.unlinkUserKakao(req.prisma, parseInt(id));
+    
+    res.json({ 
+      success: true, 
+      message: '사용자의 카카오 계정 연결이 해제되었습니다.',
+      data: result 
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getAllUsers,
   getResponseStats,
   getDonationStats,
   sendQuestion,
-  setKakaoTokens
+  setKakaoTokens,
+  getUserById,
+  updateUser,
+  toggleUserSubscription,
+  updateUserPremium,
+  toggleUserStatus,
+  unlinkUserKakao
 };

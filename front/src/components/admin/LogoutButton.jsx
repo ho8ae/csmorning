@@ -1,20 +1,37 @@
-import { motion } from 'framer-motion'; // eslint-disable-line no-unused-vars
+import { useState } from 'react';
+import { FiLogOut } from 'react-icons/fi';
+import { useNavigate } from 'react-router-dom';
 
 const LogoutButton = ({ onLogout }) => {
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    if (window.confirm('로그아웃 하시겠습니까?')) {
+      try {
+        setIsLoggingOut(true);
+        await onLogout();
+        navigate('/login');
+      } catch (error) {
+        console.error('로그아웃 중 오류:', error);
+        alert('로그아웃 중 오류가 발생했습니다.');
+      } finally {
+        setIsLoggingOut(false);
+      }
+    }
+  };
+
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay: 0.6 }}
-      className="mt-6 text-center"
-    >
+    <div className="fixed bottom-6 right-6">
       <button
-        onClick={onLogout}
-        className="px-4 py-2 text-red-700 bg-red-100 rounded-md hover:bg-red-200"
+        onClick={handleLogout}
+        disabled={isLoggingOut}
+        className="flex items-center justify-center px-4 py-2 text-white bg-blue-600 rounded-full shadow-lg hover:bg-blue-700 transition-colors"
       >
-        로그아웃
+        <FiLogOut className="mr-2" />
+        {isLoggingOut ? '로그아웃 중...' : '로그아웃'}
       </button>
-    </motion.div>
+    </div>
   );
 };
 

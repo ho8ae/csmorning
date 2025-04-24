@@ -13,7 +13,7 @@ import LogoutButton from '../components/admin/LogoutButton';
 
 const AdminDashboardPage = () => {
   const navigate = useNavigate();
-  const { user, logout } = useAuthStore();
+  const { user, logout, checkAuth } = useAuthStore();
   const [stats, setStats] = useState({
     responses: null,
     donations: null
@@ -24,30 +24,68 @@ const AdminDashboardPage = () => {
   const [error, setError] = useState(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
+  // 사용자 인증 확인
+  useEffect(() => {
+    const verifyAuth = async () => {
+      try {
+        const currentUser = await checkAuth();
+        if (!currentUser) {
+          navigate('/login');
+          return;
+        }
+        
+        if (currentUser.role !== 'admin') {
+          navigate('/dashboard');
+        }
+      } catch (error) {
+        console.error('인증 확인 오류:', error);
+        navigate('/login');
+      }
+    };
+    
+    verifyAuth();
+  }, [checkAuth, navigate]);
+
   useEffect(() => {
     const fetchData = async () => {
       try {
         setIsLoading(true);
+        setError(null);
         
-        // 통계 데이터 가져오기
-        const [responseStats, donationStats, usersData, questionsData] = await Promise.all([
-          statsAPI.getResponseStats(),
-          statsAPI.getDonationStats(),
-          usersAPI.getAll(),
-          questionsAPI.getAll()
-        ]);
+        // 각 API 호출을 개별적으로 실행하고 에러 처리
+        try {
+          const questionsData = await questionsAPI.getAll();
+          setQuestions(questionsData);
+        } catch (err) {
+          console.error('질문 데이터 로딩 중 오류:', err);
+        }
         
-        setStats({
-          responses: responseStats,
-          donations: donationStats
-        });
+        try {
+          const usersData = await usersAPI.getAll();
+          setUsers(usersData);
+        } catch (err) {
+          console.error('사용자 데이터 로딩 중 오류:', err);
+        }
         
-        setUsers(usersData);
-        setQuestions(questionsData);
+        try {
+          const responseStats = await statsAPI.getResponseStats();
+          setStats(prev => ({ ...prev, responses: responseStats }));
+        } catch (err) {
+          console.error('응답 통계 로딩 중 오류:', err);
+          setStats(prev => ({ ...prev, responses: null }));
+        }
+        
+        try {
+          const donationStats = await statsAPI.getDonationStats();
+          setStats(prev => ({ ...prev, donations: donationStats }));
+        } catch (err) {
+          console.error('기부 통계 로딩 중 오류:', err);
+          setStats(prev => ({ ...prev, donations: null }));
+        }
         
       } catch (error) {
         console.error('대시보드 데이터 로딩 중 오류:', error);
-        setError('데이터를 불러오는 중 오류가 발생했습니다.');
+        setError('일부 데이터를 불러오는 중 오류가 발생했습니다.');
       } finally {
         setIsLoading(false);
       }
@@ -55,13 +93,6 @@ const AdminDashboardPage = () => {
     
     fetchData();
   }, []);
-
-  // 관리자 권한 확인
-  useEffect(() => {
-    if (user && user.role !== 'admin') {
-      navigate('/dashboard');
-    }
-  }, [user, navigate]);
 
   if (isLoading) {
     return (
