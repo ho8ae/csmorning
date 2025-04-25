@@ -32,7 +32,7 @@ function scheduleDailyQuestion() {
   );
 
   // 매일 오전 0시에 새로운 일일 질문 설정 (한국 시간)
-  cron.schedule('00 0 * * *', createDailyQuestion, {
+  cron.schedule('30 07 * * *', createDailyQuestion, {
     timezone: 'Asia/Seoul',
   });
 
