@@ -374,10 +374,41 @@ async function findOrCreateKakaoUser(userInfo) {
   return user;
 }
 
+/**
+ * 사용자 학습 모드 업데이트
+ * @param {number} userId - 사용자 ID
+ * @param {string} studyMode - 학습 모드 ('daily' 또는 'weekly')
+ * @returns {Promise<Object>} 업데이트된 사용자 정보
+ */
+const updateUserStudyMode = async (userId, studyMode) => {
+  // 사용자 존재 여부 확인
+  const user = await prisma.user.findUnique({
+    where: { id: userId }
+  });
+  
+  if (!user) {
+    throw createError(404, '사용자를 찾을 수 없습니다.');
+  }
+  
+  // 사용자 학습 모드 업데이트
+  const updatedUser = await prisma.user.update({
+    where: { id: userId },
+    data: {
+      studyMode
+    }
+  });
+  
+  // 비밀번호 필드 제외하고 응답
+  const { password: _, ...userWithoutPassword } = updatedUser;
+  
+  return userWithoutPassword;
+};
+
 module.exports = {
   login,
   processKakaoLogin,
   register,
   updateUserPremium,
-  findOrCreateKakaoUser
+  findOrCreateKakaoUser,
+  updateUserStudyMode
 };

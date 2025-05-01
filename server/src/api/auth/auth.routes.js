@@ -26,12 +26,14 @@ router.get('/kakao/sync-callback', authController.handleKakaoSyncCallback);
 // 카카오 로그인 리다이렉트 처리
 router.get('/kakao/callback', authController.redirectToFrontendCallback);
 
-
 // 카카오 채널 연동
 router.post('/link-kakao-channel', isAuthenticated, authController.linkKakaoChannel);
 
 // 프리미엄 상태 업데이트
 router.post('/update-premium', isAuthenticated, validate(authValidation.updatePremiumSchema), authController.updatePremium);
+
+// 추가: 학습 모드 업데이트
+router.post('/update-study-mode', isAuthenticated, validate(authValidation.updateStudyModeSchema), authController.updateStudyMode);
 
 // 카카오 계정 변동 웹훅
 router.post('/webhook/kakao', authController.handleKakaoWebhook);

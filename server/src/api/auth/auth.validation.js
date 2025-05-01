@@ -88,9 +88,19 @@ const updatePremiumSchema = Joi.object({
   })
 });
 
+// 학습 모드 업데이트 요청 스키마
+const updateStudyModeSchema = Joi.object({
+  studyMode: Joi.string().valid('daily', 'weekly').required().messages({
+    'any.only': '학습 모드는 daily 또는 weekly 중 하나여야 합니다.',
+    'string.empty': '학습 모드를 선택해주세요.',
+    'any.required': '학습 모드를 선택해주세요.'
+  })
+});
+
 module.exports = {
   loginSchema,
   kakaoLoginSchema,
   registerSchema,
-  updatePremiumSchema
+  updatePremiumSchema,
+  updateStudyModeSchema
 };
