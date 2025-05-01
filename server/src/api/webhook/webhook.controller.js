@@ -272,9 +272,8 @@ const handleSubscriptionCommand = async (req, user, utterance) => {
   return createKakaoResponse(responseText);
 };
 
-
 /**
- * 카카오톡 챗봇 스킬 메시지 처리
+ * 카카오톡 챗봇 스킬 메시지 처리 (업데이트)
  */
 const handleKakaoMessage = async (req, res, next) => {
   try {
@@ -297,39 +296,64 @@ const handleKakaoMessage = async (req, res, next) => {
     // 메시지 내용에 따른 처리
     let responseBody;
 
-    if (
-      utterance.includes('안녕') ||
-      utterance.includes('시작') ||
-      utterance.includes('도움말')
-    ) {
+    // 일반 커맨드
+    if (utterance.includes('안녕') || utterance.includes('시작') || utterance.includes('도움말')) {
       responseBody = await handleHelpCommand(req, user);
-    } else if (
-      utterance.includes('오늘의 질문') ||
-      utterance.includes('문제')
-    ) {
-      responseBody = await handleTodayQuestionCommand(req, user);
-    } else if (/^[1-9]\d*$/.test(utterance.trim())) {
-      responseBody = await handleAnswerCommand(req, user, utterance);
-    } else if (utterance.includes('계정 연동')) {
-      responseBody = await handleAccountLinkCommand(req, user);
-    } else if (utterance.includes('구독')) {
-      responseBody = await handleSubscriptionCommand(req, user, utterance);
     } 
-
-    // 기능 맛보기 관련 명령어 처리 추가
+    // 오늘의 질문
+    else if (utterance.includes('오늘의 질문') || utterance.includes('문제')) {
+      responseBody = await handleTodayQuestionCommand(req, user);
+    } 
+    // 오늘의 CS 지식 (추가된 부분)
+    else if (utterance.includes('오늘의 CS 지식') || utterance.includes('CS 지식')) {
+      responseBody = await handleTodayCSContentCommand(req, user);
+    }
+    // 주간 퀴즈 관련 명령어 (추가된 부분)
+    else if (utterance.includes('주간 퀴즈') || utterance.includes('주간퀴즈') || 
+             utterance.includes('일요일 퀴즈') || utterance.includes('주간 모드 퀴즈')) {
+      responseBody = await handleWeeklyQuizCommand(req, user);
+    } 
+    // 주간 퀴즈 답변 처리 (추가된 부분)
+    else if (utterance.startsWith('주간 퀴즈 답변') || utterance.startsWith('주간퀴즈 답변')) {
+      responseBody = await handleWeeklyQuizAnswerCommand(req, user, utterance);
+    }
+    // 학습 모드 변경 (추가된 부분)
+    else if (utterance.includes('학습 모드') || utterance.includes('모드 변경') || 
+             utterance.includes('매일 모드') || utterance.includes('주간 모드')) {
+      responseBody = await handleStudyModeCommand(req, user, utterance);
+    }
+    // 일반 번호 답변 (기존 오늘의 질문용)
+    else if (/^[1-9]\d*$/.test(utterance.trim())) {
+      responseBody = await handleAnswerCommand(req, user, utterance);
+    } 
+    // 계정 연동
+    else if (utterance.includes('계정 연동')) {
+      responseBody = await handleAccountLinkCommand(req, user);
+    } 
+    // 구독 관련
+    else if (utterance.includes('구독')) {
+      responseBody = await handleSubscriptionCommand(req, user, utterance);
+    }
+    // 기능 맛보기 관련
     else if (utterance.includes('기능 맛보기') || utterance.includes('기능맛보기')) {
       responseBody = await handleFeaturePreviewCommand(req, user);
-    } else if (utterance.includes('내 정답률')) {
+    } 
+    else if (utterance.includes('내 정답률')) {
       responseBody = await handleMyAccuracyCommand(req, user);
-    } else if (utterance.includes('카테고리별 성과')) {
+    } 
+    else if (utterance.includes('카테고리별 성과')) {
       responseBody = await handleCategoryPerformanceCommand(req, user);
-    } else if (utterance.includes('내 활동 캘린더') || utterance.includes('활동 캘린더')) {
+    } 
+    else if (utterance.includes('내 활동 캘린더') || utterance.includes('활동 캘린더')) {
       responseBody = await handleActivityCalendarCommand(req, user);
-    } else if (utterance.includes('오늘 질문 통계') || utterance.includes('질문 통계')) {
+    } 
+    else if (utterance.includes('오늘 질문 통계') || utterance.includes('질문 통계')) {
       responseBody = await handleTodayQuestionStatsCommand(req, user);
-    } else if (utterance.includes('최신 토론')) {
+    } 
+    else if (utterance.includes('최신 토론')) {
       responseBody = await handleLatestDiscussionsCommand(req, user);
-    } else {
+    } 
+    else {
       responseBody = createKakaoResponse(RESPONSE_MESSAGES.UNKNOWN_COMMAND);
     }
 
@@ -590,6 +614,340 @@ const testEndpoint = (req, res) => {
   return res.status(200).json(responseBody);
 };
 
+/**
+ * 학습 모드 변경 처리
+ */
+const handleStudyModeCommand = async (req, user, utterance) => {
+  try {
+    // 모드 선택
+    let newMode = null;
+    
+    if (utterance.includes('매일') || utterance.includes('데일리')) {
+      newMode = 'daily';
+    } else if (utterance.includes('주간') || utterance.includes('위클리')) {
+      newMode = 'weekly';
+    }
+    
+    if (!newMode) {
+      return createKakaoCardResponse(
+        '학습 모드 선택',
+        '원하시는 학습 모드를 선택해주세요.\n\n매일 모드: 매일 하나의 CS 문제가 제공됩니다.\n주간 모드: 매일 CS 지식이 제공되고, 주말에 관련 문제 7개를 풀 수 있습니다.',
+        [],
+        [
+          {
+            label: '매일 모드',
+            action: 'message',
+            messageText: '매일 모드로 변경',
+          },
+          {
+            label: '주간 모드',
+            action: 'message',
+            messageText: '주간 모드로 변경',
+          }
+        ]
+      );
+    }
+    
+    // 임시 사용자인 경우 계정 연동 필요
+    if (user.isTemporary) {
+      return createKakaoResponse(
+        RESPONSE_MESSAGES.ACCOUNT_LINKING_REQUIRED,
+        QUICK_REPLIES.DEFAULT,
+      );
+    }
+    
+    // 모드 업데이트
+    await webhookService.updateUserStudyMode(req.prisma, user.id, newMode);
+    
+    const modeText = newMode === 'daily' ? '매일' : '주간';
+    const modeDescription = newMode === 'daily' 
+      ? '매일 하나의 CS 문제가 제공됩니다.' 
+      : '매일 CS 지식이 제공되고, 주말에 관련 문제 7개를 풀 수 있습니다.';
+    
+    return createKakaoResponse(
+      `학습 모드가 ${modeText} 모드로 변경되었습니다.\n\n${modeText} 모드에서는 ${modeDescription}`,
+      QUICK_REPLIES.DEFAULT
+    );
+  } catch (error) {
+    console.error('학습 모드 변경 중 오류:', error);
+    return createKakaoResponse(RESPONSE_MESSAGES.ERROR);
+  }
+};
+
+/**
+ * 오늘의 CS 지식 처리
+ */
+const handleTodayCSContentCommand = async (req, user) => {
+  try {
+    const csContent = await webhookService.getTodayCSContent(req.prisma);
+    
+    if (!csContent) {
+      return createKakaoResponse("오늘의 CS 지식이 아직 준비되지 않았습니다. 잠시 후 다시 시도해주세요!");
+    }
+    
+    // 컨텐츠 미리보기
+    const previewLength = 150;
+    const contentPreview = csContent.content.length > previewLength 
+      ? csContent.content.substring(0, previewLength) + '...' 
+      : csContent.content;
+    
+    return createKakaoCardResponse(
+      csContent.title,
+      `${contentPreview}\n\n자세한 내용은 웹사이트에서 확인하세요. 주간 퀴즈에서 이번 주 배운 내용을 테스트합니다!`,
+      [
+        {
+          action: 'webLink',
+          label: '웹사이트에서 보기',
+          webLinkUrl: `${process.env.SERVICE_URL}/cs-content/${csContent.id}`,
+        }
+      ],
+      QUICK_REPLIES.DEFAULT
+    );
+  } catch (error) {
+    console.error('오늘의 CS 지식 처리 중 오류:', error);
+    return createKakaoResponse(RESPONSE_MESSAGES.ERROR);
+  }
+};
+
+/**
+ * 주간 퀴즈 시작 처리
+ */
+const handleWeeklyQuizCommand = async (req, user) => {
+  try {
+    // 임시 사용자인 경우 계정 연동 필요
+    if (user.isTemporary) {
+      return createKakaoResponse(
+        RESPONSE_MESSAGES.ACCOUNT_LINKING_REQUIRED,
+        QUICK_REPLIES.DEFAULT,
+      );
+    }
+    
+    // 주간 모드 사용자가 아닌 경우
+    if (user.studyMode !== 'weekly') {
+      return createKakaoResponse(
+        "주간 퀴즈 기능은 주간 모드에서만 사용할 수 있습니다. '학습 모드 변경'을 입력하여 모드를 변경해주세요.",
+        [
+          {
+            label: '학습 모드 변경',
+            action: 'message',
+            messageText: '학습 모드 변경',
+          },
+          {
+            label: '오늘의 질문',
+            action: 'message',
+            messageText: '오늘의 질문',
+          }
+        ]
+      );
+    }
+    
+    // 현재 주차와 응답 현황 조회
+    const weekNumber = webhookService.getCurrentWeekNumber();
+    const { quizzes } = await webhookService.getWeeklyQuizzes(req.prisma, weekNumber);
+    
+    if (quizzes.length === 0) {
+      return createKakaoResponse(
+        `${weekNumber}주차 주간 퀴즈가 아직 준비되지 않았습니다. 일요일에 다시 시도해주세요.`,
+        QUICK_REPLIES.DEFAULT
+      );
+    }
+    
+    // 사용자 응답 현황 조회
+    const userResponses = await webhookService.getUserWeeklyResponses(
+      req.prisma, 
+      user.id, 
+      weekNumber
+    );
+    
+    // 모든 문제를 풀었는지 확인
+    if (userResponses.progress.answered >= userResponses.progress.total) {
+      const correctCount = userResponses.progress.correct;
+      const totalCount = userResponses.progress.total;
+      const accuracy = ((correctCount / totalCount) * 100).toFixed(1);
+      
+      return createKakaoResponse(
+        `🎉 ${weekNumber}주차 주간 퀴즈를 모두 완료했습니다!\n\n정답 수: ${correctCount}/${totalCount}\n정답률: ${accuracy}%\n\n다음 주차의 퀴즈를 기대해주세요!`,
+        QUICK_REPLIES.DEFAULT
+      );
+    }
+    
+    // 다음 풀어야 할 문제 번호 찾기
+    let nextQuizNumber = 1;
+    for (let i = 1; i <= 7; i++) {
+      if (userResponses.responses[i] && !userResponses.responses[i].answered) {
+        nextQuizNumber = i;
+        break;
+      }
+    }
+    
+    // 다음 문제가 없는 경우
+    if (!nextQuizNumber) {
+      // 아직 등록되지 않은 문제가 있을 가능성
+      return createKakaoResponse(
+        `현재 ${userResponses.progress.answered}개의 문제를 풀었습니다. 나머지 문제는 아직 준비 중입니다.`,
+        QUICK_REPLIES.DEFAULT
+      );
+    }
+    
+    // 다음 퀴즈 정보 가져오기
+    const nextQuiz = await webhookService.getWeeklyQuizByNumber(
+      req.prisma, 
+      weekNumber, 
+      nextQuizNumber
+    );
+    
+    if (!nextQuiz) {
+      return createKakaoResponse(
+        `${nextQuizNumber}번 퀴즈를 찾을 수 없습니다. 관리자에게 문의해주세요.`,
+        QUICK_REPLIES.DEFAULT
+      );
+    }
+    
+    // 퀴즈 포맷팅
+    let options = '';
+    const optionsArray = 
+      typeof nextQuiz.options === 'string'
+        ? JSON.parse(nextQuiz.options)
+        : nextQuiz.options;
+    
+    // 퀵 리플라이 생성
+    let quickReplies = [];
+    
+    // 선택지 처리
+    if (Array.isArray(optionsArray)) {
+      optionsArray.forEach((option, index) => {
+        options += `${index + 1}. ${option}\n`;
+      });
+      
+      // 선택지 수에 맞게 퀵 리플라이 버튼 생성
+      for (let i = 0; i < optionsArray.length; i++) {
+        quickReplies.push({
+          label: `${i + 1}번`,
+          action: 'message',
+          messageText: `주간 퀴즈 답변 ${nextQuizNumber} ${i + 1}`,
+        });
+      }
+    } else {
+      options = "선택지 형식이 올바르지 않습니다.";
+    }
+    
+    // 진행 상황 표시용 이모지 생성
+    let progressEmoji = '';
+    for (let i = 1; i <= 7; i++) {
+      if (userResponses.responses[i] && userResponses.responses[i].answered) {
+        // 이미 푼 문제
+        progressEmoji += userResponses.responses[i].isCorrect ? '🟢' : '🔴';
+      } else if (i === nextQuizNumber) {
+        // 현재 풀고 있는 문제
+        progressEmoji += '🔵';
+      } else {
+        // 아직 풀지 않은 문제
+        progressEmoji += '⚪';
+      }
+    }
+    
+    const responseText = `[${weekNumber}주차 주간 퀴즈 - ${nextQuizNumber}/7]\n\n${progressEmoji}\n\n${nextQuiz.quizText}\n\n${options}\n\n답변은 번호로 선택해주세요.`;
+    
+    return createKakaoResponse(responseText, quickReplies);
+  } catch (error) {
+    console.error('주간 퀴즈 처리 중 오류:', error);
+    return createKakaoResponse(RESPONSE_MESSAGES.ERROR);
+  }
+};
+
+/**
+ * 주간 퀴즈 답변 처리
+ */
+const handleWeeklyQuizAnswerCommand = async (req, user, utterance) => {
+  try {
+    // 임시 사용자인 경우 계정 연동 필요
+    if (user.isTemporary) {
+      return createKakaoResponse(
+        RESPONSE_MESSAGES.ACCOUNT_LINKING_REQUIRED,
+        QUICK_REPLIES.DEFAULT,
+      );
+    }
+    
+    // 입력 형식: "주간 퀴즈 답변 {문제번호} {답변}"
+    const parts = utterance.split(' ');
+    if (parts.length < 5) {
+      return createKakaoResponse(
+        "올바른 답변 형식이 아닙니다. '주간 퀴즈'를 입력하여 다시 시도해주세요.",
+        QUICK_REPLIES.DEFAULT
+      );
+    }
+    
+    const quizNumber = parseInt(parts[3]);
+    const answer = parseInt(parts[4]) - 1;  // 0-based index로 변환
+    
+    // 현재 주차 계산
+    const weekNumber = webhookService.getCurrentWeekNumber();
+    
+    // 해당 퀴즈 찾기
+    const quiz = await webhookService.getWeeklyQuizByNumber(
+      req.prisma,
+      weekNumber,
+      quizNumber
+    );
+    
+    if (!quiz) {
+      return createKakaoResponse(
+        "해당 번호의 퀴즈를 찾을 수 없습니다. '주간 퀴즈'를 입력하여 다시 시도해주세요.",
+        QUICK_REPLIES.DEFAULT
+      );
+    }
+    
+    try {
+      // 응답 처리
+      const result = await webhookService.createWeeklyQuizResponse(
+        req.prisma,
+        user.id,
+        quiz.id,
+        answer
+      );
+      
+      // 응답 메시지 준비
+      let responseText;
+      if (result.isCorrect) {
+        responseText = `정답입니다! 👏\n\n[설명💡]\n\n${quiz.explanation}`;
+      } else {
+        const correctOptionIndex = quiz.correctOption;
+        responseText = `아쉽게도 오답입니다. 😢\n\n정답은 ${correctOptionIndex + 1}번입니다.\n\n[설명💡]\n\n${quiz.explanation}`;
+      }
+      
+      // 다음 퀴즈 버튼 추가
+      return createKakaoResponse(responseText, [
+        {
+          label: '다음 문제',
+          action: 'message',
+          messageText: '주간 퀴즈',
+        },
+        {
+          label: '오늘의 질문',
+          action: 'message',
+          messageText: '오늘의 질문',
+        },
+        {
+          label: '도움말',
+          action: 'message',
+          messageText: '도움말',
+        }
+      ]);
+    } catch (error) {
+      if (error.message.includes('이미 해당 퀴즈에 응답했습니다')) {
+        return createKakaoResponse(
+          "이미 답변한 문제입니다. '주간 퀴즈'를 입력하여 다음 문제로 진행해주세요.",
+          QUICK_REPLIES.DEFAULT
+        );
+      }
+      throw error;
+    }
+  } catch (error) {
+    console.error('주간 퀴즈 답변 처리 중 오류:', error);
+    return createKakaoResponse(RESPONSE_MESSAGES.ERROR);
+  }
+};
+
 module.exports = {
   handleKakaoMessage,
   testEndpoint,
@@ -601,4 +959,8 @@ module.exports = {
   handleTodayQuestionStatsCommand,
   handleLatestDiscussionsCommand,
   handleSubscriptionCommand,
+  handleStudyModeCommand,
+  handleTodayCSContentCommand,
+  handleWeeklyQuizCommand,
+  handleWeeklyQuizAnswerCommand,
 };

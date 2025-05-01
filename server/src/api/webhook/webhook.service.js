@@ -669,6 +669,215 @@ const getLatestDiscussions = async (prisma, limit = 5) => {
   }
 };
 
+/**
+ * 사용자 학습 모드 업데이트
+ * @param {object} prisma - Prisma 클라이언트
+ * @param {number} userId - 사용자 ID
+ * @param {string} studyMode - 학습 모드 ('daily' 또는 'weekly')
+ * @returns {Promise<Object>} 업데이트된 사용자 정보
+ */
+const updateUserStudyMode = async (prisma, userId, studyMode) => {
+  try {
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: { studyMode }
+    });
+    
+    return updatedUser;
+  } catch (error) {
+    console.error('사용자 학습 모드 업데이트 중 오류:', error);
+    throw error;
+  }
+};
+
+/**
+ * 현재 주차 계산
+ * @returns {number} 현재 주차 번호
+ */
+const getCurrentWeekNumber = () => {
+  const startDate = new Date(2023, 0, 1);
+  const currentDate = new Date();
+  const diffTime = Math.abs(currentDate - startDate);
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  const currentWeek = Math.ceil(diffDays / 7);
+  return currentWeek;
+};
+
+/**
+ * 주간 퀴즈 목록 조회
+ * @param {object} prisma - Prisma 클라이언트
+ * @param {number} weekNumber - 주차 번호 (없으면 현재 주차)
+ * @returns {Promise<Array>} 주간 퀴즈 목록
+ */
+const getWeeklyQuizzes = async (prisma, weekNumber = null) => {
+  // 주차 설정
+  const week = weekNumber || getCurrentWeekNumber();
+  
+  const quizzes = await prisma.weeklyQuiz.findMany({
+    where: {
+      weekNumber: week,
+      active: true
+    },
+    orderBy: { quizNumber: 'asc' }
+  });
+  
+  return { week, quizzes };
+};
+
+/**
+ * 특정 주차, 번호의 주간 퀴즈 조회
+ * @param {object} prisma - Prisma 클라이언트
+ * @param {number} weekNumber - 주차 번호
+ * @param {number} quizNumber - 퀴즈 번호
+ * @returns {Promise<Object|null>} 주간 퀴즈
+ */
+const getWeeklyQuizByNumber = async (prisma, weekNumber, quizNumber) => {
+  return await prisma.weeklyQuiz.findFirst({
+    where: {
+      weekNumber,
+      quizNumber,
+      active: true
+    }
+  });
+};
+
+/**
+ * 주간 퀴즈 응답 생성
+ * @param {object} prisma - Prisma 클라이언트
+ * @param {number} userId - 사용자 ID
+ * @param {number} weeklyQuizId - 주간 퀴즈 ID
+ * @param {number} answer - 사용자 응답 (0-based index)
+ * @returns {Promise<Object>} 응답 정보
+ */
+const createWeeklyQuizResponse = async (prisma, userId, weeklyQuizId, answer) => {
+  // 퀴즈 정보 조회
+  const quiz = await prisma.weeklyQuiz.findUnique({
+    where: { id: weeklyQuizId }
+  });
+  
+  if (!quiz) {
+    throw new Error('해당 퀴즈를 찾을 수 없습니다.');
+  }
+  
+  // 이미 응답했는지 확인
+  const existingResponse = await prisma.weeklyResponse.findFirst({
+    where: {
+      userId,
+      weeklyQuizId
+    }
+  });
+  
+  if (existingResponse) {
+    throw new Error('이미 해당 퀴즈에 응답했습니다.');
+  }
+  
+  // 정답 여부 확인
+  const isCorrect = quiz.correctOption === answer;
+  
+  // 응답 저장
+  const response = await prisma.weeklyResponse.create({
+    data: {
+      userId,
+      weeklyQuizId,
+      answer,
+      isCorrect
+    }
+  });
+  
+  // 사용자 통계 업데이트
+  await prisma.user.update({
+    where: { id: userId },
+    data: {
+      totalAnswered: { increment: 1 },
+      correctAnswers: isCorrect ? { increment: 1 } : undefined
+    }
+  });
+  
+  return {
+    response,
+    quiz,
+    isCorrect
+  };
+};
+
+/**
+ * 사용자의 주간 퀴즈 응답 현황 조회
+ * @param {object} prisma - Prisma 클라이언트
+ * @param {number} userId - 사용자 ID
+ * @param {number} weekNumber - 주차 번호 (없으면 현재 주차)
+ * @returns {Promise<Object>} 응답 현황
+ */
+const getUserWeeklyResponses = async (prisma, userId, weekNumber = null) => {
+  // 주차 설정
+  const week = weekNumber || getCurrentWeekNumber();
+  
+  // 해당 주차의 퀴즈 목록 조회
+  const { quizzes } = await getWeeklyQuizzes(prisma, week);
+  
+  // 사용자 응답 조회
+  const responses = await prisma.weeklyResponse.findMany({
+    where: {
+      userId,
+      weeklyQuiz: {
+        weekNumber: week
+      }
+    },
+    include: {
+      weeklyQuiz: true
+    }
+  });
+  
+  // 응답 맵 생성
+  const responseMap = {};
+  quizzes.forEach(quiz => {
+    responseMap[quiz.quizNumber] = {
+      quizId: quiz.id,
+      answered: false
+    };
+  });
+  
+  responses.forEach(resp => {
+    responseMap[resp.weeklyQuiz.quizNumber] = {
+      quizId: resp.weeklyQuizId,
+      answered: true,
+      isCorrect: resp.isCorrect,
+      answer: resp.answer
+    };
+  });
+  
+  // 다음 풀어야 할 문제 번호 찾기
+  let nextQuizNumber = null;
+  for (let i = 1; i <= 7; i++) {
+    if (responseMap[i] && !responseMap[i].answered) {
+      nextQuizNumber = i;
+      break;
+    }
+  }
+  
+  return {
+    week,
+    responses: responseMap,
+    nextQuizNumber,
+    progress: {
+      total: quizzes.length,
+      answered: responses.length,
+      correct: responses.filter(r => r.isCorrect).length
+    }
+  };
+};
+
+/**
+ * 오늘의 CS 지식 컨텐츠 조회
+ * @param {object} prisma - Prisma 클라이언트
+ * @returns {Promise<Object|null>} 최신 CS 컨텐츠
+ */
+const getTodayCSContent = async (prisma) => {
+  return await prisma.cSContent.findFirst({
+    orderBy: { sendDate: 'desc' },
+    take: 1
+  });
+};
+
 
 
 module.exports = {
@@ -686,5 +895,12 @@ module.exports = {
   getUserCategoryPerformance,
   getUserActivityStats,
   getTodayQuestionStats,
-  getLatestDiscussions
+  getLatestDiscussions,
+  updateUserStudyMode,
+  getCurrentWeekNumber,
+  getWeeklyQuizzes,
+  getWeeklyQuizByNumber,
+  createWeeklyQuizResponse,
+  getUserWeeklyResponses,
+  getTodayCSContent
 };
