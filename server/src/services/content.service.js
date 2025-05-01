@@ -153,7 +153,7 @@ const generateTodayCSContent = async (prisma) => {
   const nextContent = await prisma.cSContent.findFirst({
     where: { 
       active: true,
-      sendDate: { equals: null }
+      sendDate: { isNull: true }
     },
     orderBy: { createdAt: 'asc' }
   });
