@@ -7,6 +7,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+
 model User {
   id                  Int                  @id @default(autoincrement())
   kakaoId             String?              @unique
@@ -29,12 +30,35 @@ model User {
   phoneNumber         String?
   isPremium           Boolean              @default(false)
   premiumUntil        DateTime?
+  // 추가: 학습 모드 (daily = 매일 문제 모드, weekly = 주간 문제 모드)
+  studyMode           StudyMode            @default(daily)
   activityCalendar    ActivityCalendar[]
   discussionComments  DiscussionComment[]
   discussionReactions DiscussionReaction[]
   donations           Donation[]
   responses           Response[]
+  weeklyResponses     WeeklyResponse[]     // 추가: 주간 문제 응답
   kakaoMappings       UserKakaoMapping[]
+}
+
+// 학습 모드 열거형
+enum StudyMode {
+  daily
+  weekly
+}
+
+
+// 추가: CS 지식 정보 모델
+model CSContent {
+  id           Int            @id @default(autoincrement())
+  title        String
+  content      String         @db.Text
+  category     String
+  sendDate     DateTime       @default(now())
+  active       Boolean        @default(true)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  weeklyQuizzes WeeklyQuiz[]
 }
 
 model Question {
@@ -58,6 +82,36 @@ model DailyQuestion {
   sentDate   DateTime   @default(now())
   question   Question   @relation(fields: [questionId], references: [id])
   responses  Response[]
+}
+
+
+// 추가: 주간 퀴즈 모델
+model WeeklyQuiz {
+  id            Int              @id @default(autoincrement())
+  csContentId   Int
+  quizText      String
+  options       Json
+  correctOption Int
+  explanation   String
+  quizNumber    Int              // 해당 주차에서 몇 번째 문제인지 (1~7)
+  weekNumber    Int              // 몇 주차 문제인지
+  active        Boolean          @default(true)
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+  csContent     CSContent        @relation(fields: [csContentId], references: [id])
+  responses     WeeklyResponse[]
+}
+
+// 추가: 주간 퀴즈 응답 모델
+model WeeklyResponse {
+  id           Int        @id @default(autoincrement())
+  userId       Int
+  weeklyQuizId Int
+  answer       Int
+  isCorrect    Boolean
+  respondedAt  DateTime   @default(now())
+  user         User       @relation(fields: [userId], references: [id])
+  weeklyQuiz   WeeklyQuiz @relation(fields: [weeklyQuizId], references: [id])
 }
 
 model Response {
