@@ -121,10 +121,51 @@ const sendDailyQuestion = Joi.object({
   }),
   userName: Joi.string().optional()
 });
+
+
+// 추가: CS 컨텐츠 알림톡 전송 유효성 검사
+const sendCSContentSchema = Joi.object({
+  phoneNumber: Joi.string().pattern(/^01[0-9]{8,9}$/).required().messages({
+    'string.pattern.base': '전화번호는 01로 시작하는 10-11자리 숫자여야 합니다. (예: 01012345678)',
+    'any.required': '전화번호는 필수 입력 항목입니다.'
+  }),
+  userName: Joi.string().optional(),
+  csContentId: Joi.number().integer().optional().messages({
+    'number.base': 'CS 컨텐츠 ID는 숫자여야 합니다.'
+  })
+});
+
+// 추가: 주간 퀴즈 알림톡 전송 유효성 검사
+const sendWeeklyQuizSchema = Joi.object({
+  phoneNumber: Joi.string().pattern(/^01[0-9]{8,9}$/).required().messages({
+    'string.pattern.base': '전화번호는 01로 시작하는 10-11자리 숫자여야 합니다. (예: 01012345678)',
+    'any.required': '전화번호는 필수 입력 항목입니다.'
+  }),
+  userName: Joi.string().optional(),
+  weekNumber: Joi.number().integer().min(1).optional().messages({
+    'number.base': '주차는 숫자여야 합니다.',
+    'number.integer': '주차는 정수여야 합니다.',
+    'number.min': '주차는 1 이상이어야 합니다.'
+  })
+});
+
+// 추가: 모드 지정 요청 유효성 검사
+const studyModeSchema = Joi.object({
+  mode: Joi.string().valid('daily', 'weekly').messages({
+    'any.only': '모드는 daily 또는 weekly 중 하나여야 합니다.'
+  }),
+  csContentId: Joi.number().integer().optional().messages({
+    'number.base': 'CS 컨텐츠 ID는 숫자여야 합니다.'
+  })
+});
+
 module.exports = {
   sendAlimTalk,
   sendFriendTalk,
   broadcastMessage,
   sendOmniMessage,
-  sendDailyQuestion
+  sendDailyQuestion,
+  sendCSContentSchema,
+  sendWeeklyQuizSchema,
+  studyModeSchema
 };

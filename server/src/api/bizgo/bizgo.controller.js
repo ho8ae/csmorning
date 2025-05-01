@@ -159,6 +159,160 @@ async function sendDailyQuestionToAll(req, res, next) {
   }
 }
 
+
+/**
+ * 테스트용 주간 퀴즈 알림톡 발송
+ */
+async function sendTestWeeklyQuiz(req, res, next) {
+  try {
+    const { phoneNumber, userName, weekNumber } = req.body;
+    
+    const week = weekNumber || getCurrentWeekNumber();
+    
+    // 알림톡 전송
+    const result = await bizgoService.sendWeeklyQuizAlimTalk(
+      week, 
+      phoneNumber, 
+      userName || '고객'
+    );
+    
+    return res.status(200).json({
+      success: true,
+      message: '주간 퀴즈 알림톡이 성공적으로 전송되었습니다.',
+      data: result
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
+ * 테스트용 CS 지식 알림톡 발송
+ */
+async function sendTestCSContent(req, res, next) {
+  try {
+    const { phoneNumber, userName, csContentId } = req.body;
+    
+    // CS 컨텐츠 가져오기
+    let csContent;
+    if (csContentId) {
+      csContent = await req.prisma.cSContent.findUnique({
+        where: { id: csContentId }
+      });
+    } else {
+      csContent = await req.prisma.cSContent.findFirst({
+        orderBy: { sendDate: 'desc' }
+      });
+    }
+    
+    if (!csContent) {
+      return res.status(404).json({
+        success: false,
+        message: 'CS 컨텐츠를 찾을 수 없습니다.'
+      });
+    }
+    
+    // 알림톡 전송
+    const result = await bizgoService.sendDailyCSContentAlimTalk(
+      csContent, 
+      phoneNumber, 
+      userName || '고객'
+    );
+    
+    return res.status(200).json({
+      success: true,
+      message: 'CS 지식 알림톡이 성공적으로 전송되었습니다.',
+      data: result
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
+ * 모든 구독자에게 CS 지식 알림톡 발송
+ */
+async function sendCSContentToAll(req, res, next) {
+  try {
+    const { mode, csContentId } = req.body;
+    
+    // 모드 기본값 설정
+    const studyMode = mode || 'weekly';
+    
+    // CS 컨텐츠 가져오기
+    let csContent;
+    if (csContentId) {
+      csContent = await req.prisma.cSContent.findUnique({
+        where: { id: csContentId }
+      });
+    } else {
+      csContent = await req.prisma.cSContent.findFirst({
+        orderBy: { sendDate: 'desc' }
+      });
+    }
+    
+    if (!csContent) {
+      return res.status(404).json({
+        success: false,
+        message: 'CS 컨텐츠를 찾을 수 없습니다.'
+      });
+    }
+    
+    // 알림톡 전송
+    const result = await bizgoService.sendDailyCSContentToSubscribers(
+      req.prisma,
+      studyMode,
+      csContent
+    );
+    
+    return res.status(200).json({
+      success: true,
+      message: `${result.sentCount}명의 ${studyMode} 모드 사용자에게 CS 지식 알림톡이 전송되었습니다.`,
+      data: result
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
+ * 모든 구독자에게 주간 퀴즈 알림톡 발송
+ */
+async function sendWeeklyQuizToAll(req, res, next) {
+  try {
+    const { mode } = req.body;
+    
+    // 모드 기본값 설정
+    const studyMode = mode || 'weekly';
+    
+    // 알림톡 전송
+    const result = await bizgoService.sendWeeklyQuizToSubscribers(
+      req.prisma,
+      studyMode
+    );
+    
+    return res.status(200).json({
+      success: true,
+      message: `${result.sentCount}명의 ${studyMode} 모드 사용자에게 주간 퀴즈 알림톡이 전송되었습니다.`,
+      data: result
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
+ * 현재 주차 계산
+ */
+function getCurrentWeekNumber() {
+  const startDate = new Date(2023, 0, 1);
+  const currentDate = new Date();
+  const diffTime = Math.abs(currentDate - startDate);
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  const currentWeek = Math.ceil(diffDays / 7);
+  return currentWeek;
+}
+
 module.exports = {
   sendTestAlimTalk,
   sendTestFriendTalk,
@@ -166,5 +320,9 @@ module.exports = {
   checkTokenStatus,
   sendTestOmniMessage,
   sendTestDailyQuestion,
-  sendDailyQuestionToAll
+  sendDailyQuestionToAll,
+  sendTestWeeklyQuiz,
+  sendWeeklyQuizToAll,
+  sendTestCSContent,
+  sendCSContentToAll
 };

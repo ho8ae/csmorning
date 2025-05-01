@@ -60,5 +60,32 @@ router.post('/broadcast-daily-question',
   bizgoController.sendDailyQuestionToAll
 );
 
+// 추가: 테스트용 CS 지식 알림톡 발송
+router.post('/cs-content',
+  isAuthenticated,
+  isAdmin,
+  bizgoController.sendTestCSContent
+);
+
+// 추가: 모든 구독자에게 CS 지식 알림톡 발송
+router.post('/broadcast-cs-content',
+  isAuthenticated,
+  isAdmin,
+  bizgoController.sendCSContentToAll
+);
+
+// 추가: 테스트용 주간 퀴즈 알림톡 발송
+router.post('/weekly-quiz',
+  isAuthenticated,
+  isAdmin,
+  bizgoController.sendTestWeeklyQuiz
+);
+
+// 추가: 모든 구독자에게 주간 퀴즈 알림톡 발송
+router.post('/broadcast-weekly-quiz',
+  isAuthenticated,
+  isAdmin,
+  bizgoController.sendWeeklyQuizToAll
+);
 
 module.exports = router;

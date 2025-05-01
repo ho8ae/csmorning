@@ -8,6 +8,7 @@ const CLIENT_ID = process.env.BIZGO_CLIENT_ID;
 const CLIENT_PASSWORD = process.env.BIZGO_CLIENT_PASSWORD;
 const SENDER_KEY = process.env.BIZGO_SENDER_KEY;
 const TEMPLATE_CODE = process.env.BIZGO_TEMPLATE_CODE;
+const TEMPLATE_CODE_WEEKLY = process.env.BIZGO_TEMPLATE_CODE_WEEKLY;
 
 // 토큰 정보
 let token = null;
@@ -505,7 +506,7 @@ async function sendDailyQuestionToAllSubscribers(prisma) {
             .replace(/\s+/g, '')
             .replace(/-/g, '');
 
-          // +82로 시작하는 경우 처리 (예: +82 10-9789-7457 → 01097897457)
+          // +82로 시작하는 경우 처리 (예: +82 10-1234-5678 → 0101235678)
           if (phoneNumber.startsWith('+82')) {
             // +82 제거하고 앞에 0 추가
             phoneNumber = '0' + phoneNumber.substring(3);
@@ -563,6 +564,391 @@ async function sendDailyQuestionToAllSubscribers(prisma) {
   }
 }
 
+/**
+ * 오늘의 질문 알림톡을 모든 구독자에게 전송 (모드 필터링 추가)
+ * @param {PrismaClient} prisma - Prisma 클라이언트
+ * @param {string} mode - 학습 모드 ('daily' 또는 'weekly')
+ * @returns {Promise<Object>} 전송 결과
+ */
+const sendDailyQuestionToSubscribers = async (prisma, mode = 'daily') => {
+  try {
+    console.log(`${mode} 모드 사용자에게 오늘의 질문 알림톡 전송 시작...`);
+
+    // 오늘의 질문 가져오기
+    const todayQuestion = await prisma.dailyQuestion.findFirst({
+      orderBy: { sentDate: 'desc' },
+      include: { question: true },
+    });
+
+    if (!todayQuestion || !todayQuestion.question) {
+      console.log('오늘의 질문이 설정되지 않았습니다.');
+      return { sentCount: 0, failedCount: 0, error: '오늘의 질문이 없습니다.' };
+    }
+
+    // 구독 중인 사용자 목록 가져오기 (모드별 필터링)
+    const subscribedUsers = await prisma.user.findMany({
+      where: {
+        isSubscribed: true,
+        phoneNumber: { not: null },
+        studyMode: mode,
+      },
+    });
+
+    console.log(
+      `${subscribedUsers.length}명의 ${mode} 모드 구독자에게 알림톡 전송 예정`,
+    );
+
+    let sentCount = 0;
+    let failedCount = 0;
+
+    // 각 사용자에게 알림톡 전송
+    for (const user of subscribedUsers) {
+      try {
+        if (!user.phoneNumber) continue;
+
+        const phoneNumber = user.phoneNumber.replace(/-/g, '');
+        const userName = user.name || '고객';
+
+        await sendDailyQuestionAlimTalk(todayQuestion, phoneNumber, userName);
+        sentCount++;
+
+        // 요청량 제한을 위해 약간의 지연 시간 추가
+        await new Promise((resolve) => setTimeout(resolve, 100));
+      } catch (error) {
+        console.error(`사용자 ${user.id}에게 알림톡 전송 실패:`, error.message);
+        failedCount++;
+      }
+    }
+
+    return { sentCount, failedCount };
+  } catch (error) {
+    console.error('오늘의 질문 알림톡 전송 중 오류 발생:', error);
+    return { sentCount: 0, failedCount: 0, error: error.message };
+  }
+};
+
+/**
+ * 오늘의 CS 지식 알림톡을 모든 구독자에게 전송
+ * @param {PrismaClient} prisma - Prisma 클라이언트
+ * @param {string} mode - 학습 모드 ('daily' 또는 'weekly')
+ * @param {Object} csContent - CS 지식 컨텐츠
+ * @returns {Promise<Object>} 전송 결과
+ */
+const sendDailyCSContentToSubscribers = async (
+  prisma,
+  mode = 'weekly',
+  csContent,
+) => {
+  try {
+    console.log(`${mode} 모드 사용자에게 오늘의 CS 지식 알림톡 전송 시작...`);
+
+    if (!csContent) {
+      console.log('오늘의 CS 지식이 설정되지 않았습니다.');
+      return {
+        sentCount: 0,
+        failedCount: 0,
+        error: '오늘의 CS 지식이 없습니다.',
+      };
+    }
+
+    // 구독 중인 사용자 목록 가져오기 (모드별 필터링)
+    const subscribedUsers = await prisma.user.findMany({
+      where: {
+        isSubscribed: true,
+        phoneNumber: { not: null },
+        studyMode: mode,
+      },
+    });
+
+    console.log(
+      `${subscribedUsers.length}명의 ${mode} 모드 구독자에게 CS 지식 알림톡 전송 예정`,
+    );
+
+    let sentCount = 0;
+    let failedCount = 0;
+
+    // 각 사용자에게 알림톡 전송
+    for (const user of subscribedUsers) {
+      try {
+        if (!user.phoneNumber) continue;
+
+        const phoneNumber = user.phoneNumber.replace(/-/g, '');
+        const userName = user.name || '고객';
+
+        await sendDailyCSContentAlimTalk(csContent, phoneNumber, userName);
+        sentCount++;
+
+        // 요청량 제한을 위해 약간의 지연 시간 추가
+        await new Promise((resolve) => setTimeout(resolve, 100));
+      } catch (error) {
+        console.error(
+          `사용자 ${user.id}에게 CS 지식 알림톡 전송 실패:`,
+          error.message,
+        );
+        failedCount++;
+      }
+    }
+
+    return { sentCount, failedCount };
+  } catch (error) {
+    console.error('오늘의 CS 지식 알림톡 전송 중 오류 발생:', error);
+    return { sentCount: 0, failedCount: 0, error: error.message };
+  }
+};
+
+/**
+ * 주간 퀴즈 알림톡을 모든 구독자에게 전송
+ * @param {PrismaClient} prisma - Prisma 클라이언트
+ * @param {string} mode - 학습 모드 ('daily' 또는 'weekly')
+ * @returns {Promise<Object>} 전송 결과
+ */
+const sendWeeklyQuizToSubscribers = async (prisma, mode = 'weekly') => {
+  try {
+    console.log(`${mode} 모드 사용자에게 주간 퀴즈 알림톡 전송 시작...`);
+
+    // 현재 주차 계산
+    const startDate = new Date(2025, 5, 5);
+    const currentDate = new Date();
+    const diffTime = Math.abs(currentDate - startDate);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    const currentWeek = Math.ceil(diffDays / 7);
+
+    // 구독 중인 사용자 목록 가져오기 (모드별 필터링)
+    const subscribedUsers = await prisma.user.findMany({
+      where: {
+        isSubscribed: true,
+        phoneNumber: { not: null },
+        studyMode: mode,
+      },
+    });
+
+    console.log(
+      `${subscribedUsers.length}명의 ${mode} 모드 구독자에게 주간 퀴즈 알림톡 전송 예정`,
+    );
+
+    let sentCount = 0;
+    let failedCount = 0;
+
+    // 각 사용자에게 알림톡 전송
+    for (const user of subscribedUsers) {
+      try {
+        if (!user.phoneNumber) continue;
+
+        const phoneNumber = user.phoneNumber.replace(/-/g, '');
+        const userName = user.name || '고객';
+
+        await sendWeeklyQuizAlimTalk(currentWeek, phoneNumber, userName);
+        sentCount++;
+
+        // 요청량 제한을 위해 약간의 지연 시간 추가
+        await new Promise((resolve) => setTimeout(resolve, 100));
+      } catch (error) {
+        console.error(
+          `사용자 ${user.id}에게 주간 퀴즈 알림톡 전송 실패:`,
+          error.message,
+        );
+        failedCount++;
+      }
+    }
+
+    return { sentCount, failedCount };
+  } catch (error) {
+    console.error('주간 퀴즈 알림톡 전송 중 오류 발생:', error);
+    return { sentCount: 0, failedCount: 0, error: error.message };
+  }
+};
+
+/**
+ * 오늘의 CS 지식 알림톡 전송
+ * @param {Object} csContent - CS 지식 컨텐츠
+ * @param {string} phoneNumber - 전화번호
+ * @param {string} userName - 사용자 이름
+ * @returns {Promise<Object>} 전송 결과
+ */
+const sendDailyCSContentAlimTalk = async (csContent, phoneNumber, userName) => {
+  try {
+    console.log(
+      `사용자 ${userName}(${phoneNumber})에게 오늘의 CS 지식 알림톡 전송 시작...`,
+    );
+
+    const accessToken = await getToken();
+
+    // 컨텐츠 정보 추출
+    const category = csContent.category || 'CS 지식';
+    const title = csContent.title || '오늘의 CS 내용을 확인해보세요';
+
+    // 내용 미리보기 
+    const contentPreview =
+      csContent.content || '자세한 내용은 CS모닝 앱에서 확인하세요! 매주 일요일에는 관련 주제 퀴즈가 제공됩니다.';
+
+    // 알림톡 내용 구성 (템플릿 변수 치환)
+    const contentTemplate =
+      '#{이름} 님 좋은 아침입니다😁\n오늘의 CS 입니다 !\n\n#{카테고리}\n#{질문}\n\n#{옵션}\n\n#{답변}\n\n#{설명}\n#{부가설명}\n\n오늘의 질문을 풀어보고 간단하게 문제를 맞춰보아요 !\n\n아침에 제일 먼저 확인하면 오늘 하루 중 첫 번째 기억이 되는거에요.\n\n오늘 하루도 파이팅 입니다 😎\n\n[안내] 해당 오늘의 질문 안내 메시지는 고객님께서 신청하신 구독으로, 매일 오전에 발송됩니다.';
+
+    // 변수 치환
+    const content = contentTemplate
+      .replace('#{이름}', userName)
+      .replace('#{카테고리}', category)
+      .replace('#{질문}', title)
+      .replace('#{옵션}', contentPreview)
+      .replace('#{답변}', '')
+      .replace('#{설명}', '')
+      .replace(
+        '#{부가설명}',
+        '매주 일요일에는 관련 주제 퀴즈가 제공됩니다.',
+      );
+
+    // 통합메시지 요청 데이터 구성
+    const data = {
+      destinations: [
+        {
+          to: phoneNumber,
+        },
+      ],
+      messageFlow: [
+        {
+          alimtalk: {
+            senderKey: SENDER_KEY,
+            msgType: 'AT',
+            templateCode: TEMPLATE_CODE_WEEKLY, // 기존 템플릿 코드 사용
+            text: content,
+            ref: `CS_Morning_${Date.now()}`,
+            attachment: {
+              button: [
+                {
+                  name: '챗봇으로 전환 !',
+                  type: 'BT',
+                },
+                {
+                  name: 'CSmorning 바로가기',
+                  type: 'WL',
+                  urlMobile: 'https://csmorning.co.kr',
+                  urlPc: 'https://csmorning.co.kr',
+                },
+              ],
+            },
+          },
+        },
+      ],
+    };
+
+    const response = await axios.post(`${BASE_URL}/v1/send/omni`, data, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+    });
+
+    if (response.data.code === 'A000') {
+      console.log(`오늘의 CS 지식 알림톡 전송 성공: ${phoneNumber}`);
+      return {
+        success: true,
+        data: response.data.data,
+        ref: response.data.ref,
+      };
+    } else {
+      throw new Error(`알림톡 전송 실패: ${response.data.result}`);
+    }
+  } catch (error) {
+    console.error(
+      `사용자 ${userName}(${phoneNumber})에게 오늘의 CS 지식 알림톡 전송 실패:`,
+      error,
+    );
+    throw error;
+  }
+};
+
+/**
+ * 주간 퀴즈 알림톡 전송
+ * @param {number} weekNumber - 주차 번호
+ * @param {string} phoneNumber - 전화번호
+ * @param {string} userName - 사용자 이름
+ * @returns {Promise<Object>} 전송 결과
+ */
+const sendWeeklyQuizAlimTalk = async (weekNumber, phoneNumber, userName) => {
+  try {
+    console.log(
+      `사용자 ${userName}(${phoneNumber})에게 주간 퀴즈 알림톡 전송 시작...`,
+    );
+
+    const accessToken = await getToken();
+
+    // 알림톡 내용 구성 (템플릿 변수 치환)
+    const contentTemplate =
+      '#{이름} 님 좋은 아침입니다😁\n오늘의 CS 입니다 !\n\n#{카테고리}\n#{질문}\n\n#{옵션}\n\n#{답변}\n\n#{설명}\n#{부가설명}\n\n오늘의 질문을 풀어보고 간단하게 문제를 맞춰보아요 !\n\n아침에 제일 먼저 확인하면 오늘 하루 중 첫 번째 기억이 되는거에요.\n\n오늘 하루도 파이팅 입니다 😎\n\n[안내] 해당 오늘의 질문 안내 메시지는 고객님께서 신청하신 구독으로, 매일 오전에 발송됩니다.';
+
+    // 변수 치환
+    const content = contentTemplate
+      .replace('#{이름}', userName)
+      .replace('#{카테고리}', '주간 CS 퀴즈')
+      .replace('#{질문}', `${weekNumber}주차 주간 퀴즈가 준비되었습니다!`)
+      .replace('#{옵션}', '이번 주에 배운 내용을 확인하는 퀴즈가 제공됩니다.')
+      .replace('#{답변}', '총 7문제가 준비되어 있습니다.')
+      .replace('#{설명}', '문제 풀이 시작을 보내보세요!')
+      .replace('#{부가설명}', '이용해주셔서 감사합니다 !');
+
+    // 통합메시지 요청 데이터 구성
+    const data = {
+      destinations: [
+        {
+          to: phoneNumber,
+        },
+      ],
+      messageFlow: [
+        {
+          alimtalk: {
+            senderKey: SENDER_KEY,
+            msgType: 'AT',
+            templateCode: TEMPLATE_CODE_WEEKLY,
+            text: content,
+            ref: `CS_Morning_${Date.now()}`,
+            attachment: {
+              button: [
+                {
+                  name: '챗봇으로 전환 !',
+                  type: 'BT',
+                },
+                {
+                  name: 'CSmorning 바로가기',
+                  type: 'WL',
+                  urlMobile: 'https://csmorning.co.kr',
+                  urlPc: 'https://csmorning.co.kr',
+                },
+              ],
+            },
+          },
+        },
+      ],
+    };
+
+    const response = await axios.post(`${BASE_URL}/v1/send/omni`, data, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+    });
+
+    if (response.data.code === 'A000') {
+      console.log(`주간 퀴즈 알림톡 전송 성공: ${phoneNumber}`);
+      return {
+        success: true,
+        data: response.data.data,
+        ref: response.data.ref,
+      };
+    } else {
+      throw new Error(`알림톡 전송 실패: ${response.data.result}`);
+    }
+  } catch (error) {
+    console.error(
+      `사용자 ${userName}(${phoneNumber})에게 주간 퀴즈 알림톡 전송 실패:`,
+      error,
+    );
+    throw error;
+  }
+};
+
 module.exports = {
   getToken,
   sendAlimTalk,
@@ -571,4 +957,10 @@ module.exports = {
   sendOmniMessage,
   sendDailyQuestionAlimTalk,
   sendDailyQuestionToAllSubscribers,
+  sendDailyCSContentAlimTalk,
+  sendDailyCSContentToSubscribers,
+  sendWeeklyQuizAlimTalk,
+  sendWeeklyQuizToSubscribers,
+  sendDailyQuestionAlimTalk,
+  sendDailyQuestionToSubscribers,
 };
