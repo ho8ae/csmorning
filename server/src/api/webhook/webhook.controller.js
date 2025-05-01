@@ -868,17 +868,30 @@ const handleWeeklyQuizAnswerCommand = async (req, user, utterance) => {
       );
     }
     
-    // 입력 형식: "주간 퀴즈 답변 {문제번호} {답변}"
-    const parts = utterance.split(' ');
-    if (parts.length < 5) {
-      return createKakaoResponse(
-        "올바른 답변 형식이 아닙니다. '주간 퀴즈'를 입력하여 다시 시도해주세요.",
-        QUICK_REPLIES.DEFAULT
-      );
-    }
+    // action.params에서 파라미터 추출 (카카오 챗봇에서 전달된 값)
+    let quizNumber, answer;
     
-    const quizNumber = parseInt(parts[3]);
-    const answer = parseInt(parts[4]) - 1;  // 0-based index로 변환
+    // 방법 1: action.params에서 파라미터 추출 (파라미터가 블록에서 올바르게 설정된 경우)
+    if (req.body.action && req.body.action.params) {
+      quizNumber = parseInt(req.body.action.params.quizNumber);
+      answer = parseInt(req.body.action.params.answerNumber) - 1; // 0-based 인덱스로 변환
+      
+      console.log(`파라미터에서 추출된 값: 퀴즈번호=${quizNumber}, 답변=${answer}`);
+    } 
+    // 방법 2: 기존 코드 (utterance에서 직접 파싱)
+    else {
+      // 입력 형식: "주간 퀴즈 답변 {문제번호} {답변번호}"
+      const parts = utterance.split(' ');
+      if (parts.length < 5) {
+        return createKakaoResponse(
+          "올바른 답변 형식이 아닙니다. '주간 퀴즈'를 입력하여 다시 시도해주세요.",
+          QUICK_REPLIES.DEFAULT
+        );
+      }
+      
+      quizNumber = parseInt(parts[3]);
+      answer = parseInt(parts[4]) - 1;  // 0-based index로 변환
+    }
     
     // 현재 주차 계산
     const weekNumber = webhookService.getCurrentWeekNumber();
@@ -895,7 +908,7 @@ const handleWeeklyQuizAnswerCommand = async (req, user, utterance) => {
         "해당 번호의 퀴즈를 찾을 수 없습니다. '주간 퀴즈'를 입력하여 다시 시도해주세요.",
         QUICK_REPLIES.DEFAULT
       );
-    }
+    }   
     
     try {
       // 응답 처리

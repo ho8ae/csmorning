@@ -34,7 +34,7 @@ function scheduleDailyQuestion() {
 
   // 매일 오전 8시에 오늘의 CS 지식 알림톡 전송 (한국 시간) - 주간 모드 사용자
   cron.schedule(
-    '16 22 * * *',
+    '00 23 * * *',
     async () => {
       try {
         console.log('오늘의 CS 지식 알림톡 전송 시작 (주간 모드)...');
@@ -61,7 +61,7 @@ function scheduleDailyQuestion() {
   
   // 매주 일요일 오전 10시에 주간 퀴즈 알림톡 전송 (한국 시간) - 주간 모드 사용자
   cron.schedule(
-    '16 22 * * 4',
+    '00 23 * * 4',
     async () => {
       try {
         console.log('주간 퀴즈 알림톡 전송 시작...');
