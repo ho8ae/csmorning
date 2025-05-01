@@ -629,10 +629,6 @@ const sendDailyQuestionToSubscribers = async (prisma, mode = 'daily') => {
 
 /**
  * 오늘의 CS 지식 알림톡을 모든 구독자에게 전송
- * @param {PrismaClient} prisma - Prisma 클라이언트
- * @param {string} mode - 학습 모드 ('daily' 또는 'weekly')
- * @param {Object} csContent - CS 지식 컨텐츠
- * @returns {Promise<Object>} 전송 결과
  */
 const sendDailyCSContentToSubscribers = async (
   prisma,
@@ -672,9 +668,21 @@ const sendDailyCSContentToSubscribers = async (
       try {
         if (!user.phoneNumber) continue;
 
-        const phoneNumber = user.phoneNumber.replace(/-/g, '');
+        // 전화번호 형식 정리: 공백 제거, 하이픈 제거, 국제번호(+82) 처리
+        let phoneNumber = user.phoneNumber
+          .replace(/\s+/g, '')
+          .replace(/-/g, '');
+
+        // +82로 시작하는 경우 처리 (예: +82 10-1234-5678 → 0101235678)
+        if (phoneNumber.startsWith('+82')) {
+          // +82 제거하고 앞에 0 추가
+          phoneNumber = '0' + phoneNumber.substring(3);
+        }
+
         const userName = user.name || '고객';
 
+        console.log(`CS 지식 알림톡 전송 전화번호 변환: ${user.phoneNumber} -> ${phoneNumber}`);
+        
         await sendDailyCSContentAlimTalk(csContent, phoneNumber, userName);
         sentCount++;
 
@@ -698,16 +706,13 @@ const sendDailyCSContentToSubscribers = async (
 
 /**
  * 주간 퀴즈 알림톡을 모든 구독자에게 전송
- * @param {PrismaClient} prisma - Prisma 클라이언트
- * @param {string} mode - 학습 모드 ('daily' 또는 'weekly')
- * @returns {Promise<Object>} 전송 결과
  */
 const sendWeeklyQuizToSubscribers = async (prisma, mode = 'weekly') => {
   try {
     console.log(`${mode} 모드 사용자에게 주간 퀴즈 알림톡 전송 시작...`);
 
     // 현재 주차 계산
-    const startDate = new Date(2025, 5, 5);
+    const startDate = new Date(2023, 0, 1);
     const currentDate = new Date();
     const diffTime = Math.abs(currentDate - startDate);
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
@@ -734,9 +739,21 @@ const sendWeeklyQuizToSubscribers = async (prisma, mode = 'weekly') => {
       try {
         if (!user.phoneNumber) continue;
 
-        const phoneNumber = user.phoneNumber.replace(/-/g, '');
+        // 전화번호 형식 정리: 공백 제거, 하이픈 제거, 국제번호(+82) 처리
+        let phoneNumber = user.phoneNumber
+          .replace(/\s+/g, '')
+          .replace(/-/g, '');
+
+        // +82로 시작하는 경우 처리 (예: +82 10-1234-5678 → 0101235678)
+        if (phoneNumber.startsWith('+82')) {
+          // +82 제거하고 앞에 0 추가
+          phoneNumber = '0' + phoneNumber.substring(3);
+        }
+
         const userName = user.name || '고객';
 
+        console.log(`주간 퀴즈 알림톡 전송 전화번호 변환: ${user.phoneNumber} -> ${phoneNumber}`);
+        
         await sendWeeklyQuizAlimTalk(currentWeek, phoneNumber, userName);
         sentCount++;
 
