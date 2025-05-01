@@ -129,6 +129,11 @@ const QUICK_REPLIES = {
       action: 'message',
       messageText: '주간 퀴즈',
     },
+    {
+      label: '모드 변경',
+      action: 'message',
+      messageText: '모드 변경',
+    },
   ],
   AFTER_ANSWER: [
     {
