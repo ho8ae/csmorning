@@ -105,6 +105,11 @@ const QUICK_REPLIES = {
       messageText: '오늘의 질문',
     },
     {
+      label: '오늘의 CS',
+      action: 'message',
+      messageText: 'CS 지식',
+    },
+    {
       label: '구독하기',
       action: 'message',
       messageText: '구독',
@@ -118,6 +123,11 @@ const QUICK_REPLIES = {
       label: '계정 연동',
       action: 'message',
       messageText: '계정 연동',
+    },
+    {
+      label: '주간 퀴즈',
+      action: 'message',
+      messageText: '주간 퀴즈',
     },
   ],
   AFTER_ANSWER: [
