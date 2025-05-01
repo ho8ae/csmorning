@@ -1,4 +1,5 @@
 const questionService = require('./question.service');
+const contentService = require('../../services/content.service');
 
 /**
  * 모든 질문 조회
@@ -50,7 +51,7 @@ const getQuestionById = async (req, res, next) => {
  */
 const createQuestion = async (req, res, next) => {
   try {
-    const { text, options, description ,correctOption, explanation, category, difficulty } = req.body;
+    const { text, options, description, correctOption, explanation, category, difficulty } = req.body;
     
     // 필수 필드 검증
     if (!text || !options || correctOption === undefined || !explanation || !category) {
@@ -207,11 +208,191 @@ const getTodayQuestion = async (req, res, next) => {
   }
 };
 
+/**
+ * 오늘의 CS 지식 조회
+ */
+const getTodayCSContent = async (req, res, next) => {
+  try {
+    // 가장 최신 CS 지식 컨텐츠 조회
+    const todayContent = await contentService.getTodayCSContent(req.prisma);
+    
+    if (!todayContent) {
+      return res.status(404).json({
+        success: false,
+        message: '오늘의 CS 지식이 없습니다.'
+      });
+    }
+    
+    return res.status(200).json({
+      success: true,
+      data: todayContent
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * 주간 퀴즈 목록 조회
+ */
+const getWeeklyQuizzes = async (req, res, next) => {
+  try {
+    const { week } = req.query;
+    let weekNumber = null;
+    
+    // 주차가 지정되지 않은 경우 현재 주차 사용
+    if (!week) {
+      const currentWeekData = await contentService.getCurrentWeeklyQuizzes(req.prisma);
+      return res.status(200).json({
+        success: true,
+        data: currentWeekData
+      });
+    }
+    
+    // 주차가 지정된 경우
+    weekNumber = parseInt(week);
+    const quizzes = await contentService.getWeeklyQuizzes(req.prisma, weekNumber);
+    
+    return res.status(200).json({
+      success: true,
+      data: {
+        currentWeek: weekNumber,
+        quizzes
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * 주간 퀴즈 응답 제출
+ */
+const submitWeeklyQuizResponse = async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+    const { weeklyQuizId, answer } = req.body;
+    
+    // 응답 처리
+    const result = await contentService.submitWeeklyQuizResponse(
+      req.prisma,
+      userId,
+      weeklyQuizId,
+      answer
+    );
+    
+    return res.status(200).json({
+      success: true,
+      data: result
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * 사용자의 주간 퀴즈 응답 현황 조회
+ */
+const getUserWeeklyResponses = async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+    const { week } = req.query;
+    
+    let weekNumber = null;
+    
+    // 주차가 지정된 경우
+    if (week) {
+      weekNumber = parseInt(week);
+    }
+    
+    // 사용자 응답 현황 조회
+    const responses = await contentService.getUserWeeklyResponses(
+      req.prisma,
+      userId,
+      weekNumber
+    );
+    
+    return res.status(200).json({
+      success: true,
+      data: responses
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * CS 컨텐츠 생성 (관리자)
+ */
+const createCSContent = async (req, res, next) => {
+  try {
+    const { title, content, category } = req.body;
+    
+    // CS 컨텐츠 생성
+    const newContent = await contentService.createCSContent(
+      req.prisma,
+      title,
+      content,
+      category
+    );
+    
+    return res.status(201).json({
+      success: true,
+      data: newContent
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * 주간 퀴즈 생성 (관리자)
+ */
+const createWeeklyQuiz = async (req, res, next) => {
+  try {
+    const {
+      csContentId,
+      quizText,
+      options,
+      correctOption,
+      explanation,
+      quizNumber,
+      weekNumber
+    } = req.body;
+    
+    // 주간 퀴즈 생성
+    const newQuiz = await contentService.createWeeklyQuiz(
+      req.prisma,
+      csContentId,
+      quizText,
+      options,
+      correctOption,
+      explanation,
+      quizNumber,
+      weekNumber
+    );
+    
+    return res.status(201).json({
+      success: true,
+      data: newQuiz
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getAllQuestions,
   getQuestionById,
   createQuestion,
   updateQuestion,
   deleteQuestion,
-  getTodayQuestion
+  getTodayQuestion,
+  // 추가된 함수들
+  getTodayCSContent,
+  getWeeklyQuizzes,
+  submitWeeklyQuizResponse,
+  getUserWeeklyResponses,
+  createCSContent,
+  createWeeklyQuiz
 };
