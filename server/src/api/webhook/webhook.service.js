@@ -793,6 +793,8 @@ const createWeeklyQuizResponse = async (prisma, userId, weeklyQuizId, answer) =>
     }
   });
   
+  console.log(`주간 퀴즈 응답 저장 완료: 사용자=${userId}, 퀴즈=${weeklyQuizId}, 정답=${isCorrect}`);
+  
   return {
     response,
     quiz,
