@@ -69,6 +69,31 @@ const handleHelpCommand = async (req, user) => {
  * 오늘의 질문 처리
  */
 const handleTodayQuestionCommand = async (req, user) => {
+  // 주간 모드 사용자의 경우 오늘의 질문 차단 (추가된 부분)
+  if (user.studyMode === 'weekly') {
+    return createKakaoResponse(
+      "주간 모드 사용자시군요! 오늘의 질문을 사용하시려면 학습 모드를 변경해주세요. 주간 모드에서는 '주간 퀴즈' 명령어를 사용해보세요.",
+      [
+        {
+          label: '학습 모드 변경',
+          action: 'message',
+          messageText: '학습 모드 변경',
+        },
+        {
+          label: '주간 퀴즈',
+          action: 'message',
+          messageText: '주간 퀴즈',
+        },
+        {
+          label: '도움말',
+          action: 'message',
+          messageText: '도움말',
+        },
+      ]
+    );
+  }
+
+  // 매일 모드 사용자만 이 부분 실행
   const todayQuestion = await webhookService.getTodayQuestion(req.prisma);
 
   if (!todayQuestion) {
@@ -123,6 +148,30 @@ const handleTodayQuestionCommand = async (req, user) => {
  * 답변 처리
  */
 const handleAnswerCommand = async (req, user, utterance) => {
+  // 주간 모드 사용자의 경우 오늘의 질문 답변 차단 (추가된 부분)
+  if (user.studyMode === 'weekly') {
+    return createKakaoResponse(
+      "주간 모드 사용자시군요! 오늘의 질문을 사용하시려면 학습 모드를 변경해주세요. 주간 모드에서는 '주간 퀴즈' 명령어를 사용해보세요.",
+      [
+        {
+          label: '학습 모드 변경',
+          action: 'message',
+          messageText: '학습 모드 변경',
+        },
+        {
+          label: '주간 퀴즈',
+          action: 'message',
+          messageText: '주간 퀴즈',
+        },
+        {
+          label: '도움말',
+          action: 'message',
+          messageText: '도움말',
+        },
+      ]
+    );
+  }
+
   const todayQuestion = await webhookService.getTodayQuestion(req.prisma);
 
   if (!todayQuestion) {
