@@ -263,11 +263,6 @@ const QUICK_REPLIES = {
       messageText: '주간 퀴즈',
     },
     {
-      label: '오늘의 질문',
-      action: 'message',
-      messageText: '오늘의 질문',
-    },
-    {
       label: '도움말',
       action: 'message',
       messageText: '도움말',
