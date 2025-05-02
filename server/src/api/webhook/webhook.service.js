@@ -695,7 +695,12 @@ const updateUserStudyMode = async (prisma, userId, studyMode) => {
  * @returns {number} 현재 주차 번호
  */
 const getCurrentWeekNumber = () => {
-  return 1;
+  const startDate = new Date(2025, 4, 1);
+  const currentDate = new Date();
+  const diffTime = Math.abs(currentDate - startDate);
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  const currentWeek = Math.ceil(diffDays / 7);
+  return currentWeek;
 };
 
 /**
