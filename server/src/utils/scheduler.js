@@ -34,7 +34,7 @@ function scheduleDailyQuestion() {
 
   // 매일 오전 8시에 오늘의 CS 지식 알림톡 전송 (한국 시간) - 주간 모드 사용자
   cron.schedule(
-    '20 23 * * *',
+    '00 08 * * *',
     async () => {
       try {
         console.log('오늘의 CS 지식 알림톡 전송 시작 (주간 모드)...');

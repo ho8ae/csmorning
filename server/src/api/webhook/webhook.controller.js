@@ -326,7 +326,26 @@ const handleKakaoMessage = async (req, res, next) => {
     ) {
       responseBody = await handleWeeklyQuizCommand(req, user);
     }
-    // 주간 퀴즈 답변 처리 (추가된 부분)
+    // 주간 퀴즈 답변 처리 (새로운 형식: "주간퀴즈답변 {문제번호} {답변번호}")
+    else if (utterance.startsWith('주간퀴즈답변')) {
+      const parts = utterance.split(' ');
+      if (parts.length >= 3) {
+        const quizNumber = parseInt(parts[1]);
+        const answer = parseInt(parts[2]);
+        // 기존 주간 퀴즈 답변 처리 함수 호출
+        responseBody = await handleWeeklyQuizAnswerCommand(
+          req,
+          user,
+          `주간 퀴즈 답변 ${quizNumber} ${answer}`
+        );
+      } else {
+        responseBody = createKakaoResponse(
+          '올바른 답변 형식이 아닙니다. 다시 시도해주세요.',
+          QUICK_REPLIES.DEFAULT
+        );
+      }
+    }
+    // 기존 주간 퀴즈 답변 형식도 유지 (이전 사용자 지원용)
     else if (
       utterance.startsWith('주간 퀴즈 답변') ||
       utterance.startsWith('주간퀴즈 답변')
@@ -353,7 +372,7 @@ const handleKakaoMessage = async (req, res, next) => {
       );
 
       // 사용자가 주간 모드이고, 다음 문제 번호가 있으면 주간 퀴즈 답변으로 처리
-      if (user.studyMode === 'weekly' && userResponses.nextQuizNumber) {
+      if (user.studyMode === 'weekly' && userResponses && userResponses.nextQuizNumber) {
         // 단순 숫자 입력을 주간 퀴즈 답변 형식으로 변환
         const answerNumber = parseInt(utterance.trim());
         const quizNumber = userResponses.nextQuizNumber;
@@ -874,12 +893,12 @@ const handleWeeklyQuizCommand = async (req, user) => {
         options += `${index + 1}. ${option}\n`;
       });
 
-      // 선택지 수에 맞게 퀵 리플라이 버튼 생성
+      // 선택지 수에 맞게 퀵 리플라이 버튼 생성 (수정된 부분)
       for (let i = 0; i < optionsArray.length; i++) {
         quickReplies.push({
           label: `${i + 1}번`,
           action: 'message',
-          messageText: `${i + 1}`, // 단순히 숫자만 보내게 수정
+          messageText: `주간퀴즈답변 ${nextQuizNumber} ${i + 1}`, // 명확한 형식으로 변경
         });
       }
     } else {
