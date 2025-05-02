@@ -374,7 +374,7 @@ const handleKakaoMessage = async (req, res, next) => {
         user.id,
         weekNumber,
       );
-
+    
       // 사용자가 주간 모드이고, 다음 문제 번호가 있으면 주간 퀴즈 답변으로 처리
       if (user.studyMode === 'weekly' && userResponses && userResponses.nextQuizNumber) {
         // 단순 숫자 입력을 주간 퀴즈 답변 형식으로 변환
@@ -978,7 +978,7 @@ const handleWeeklyQuizCommand = async (req, user) => {
         quickReplies.push({
           label: `${i + 1}번`,
           action: 'message',
-          messageText: `주간퀴즈답변 ${nextQuizNumber}번 ${i + 1}`, // 퀴즈 번호는 "번"을 붙여서 구분
+          messageText: `${i + 1}`, // 단순 숫자로 변경
         });
       }
     } else {
