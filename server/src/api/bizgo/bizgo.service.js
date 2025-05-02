@@ -463,12 +463,15 @@ async function sendDailyQuestionAlimTalk(questionData, phoneNumber, userName) {
 }
 
 /**
- * 모든 구독자에게 오늘의 질문 알림톡 전송
+ * 모든 구독자에게 오늘의 질문 알림톡 전송 (모드 필터링 추가)
  * @param {object} prisma - Prisma 클라이언트 인스턴스
+ * @param {string} mode - 학습 모드 ('daily' 또는 'weekly', 기본값은 'daily')
  * @returns {Promise<object>} 전송 결과
  */
-async function sendDailyQuestionToAllSubscribers(prisma) {
+async function sendDailyQuestionToAllSubscribers(prisma, mode = 'daily') {
   try {
+    console.log(`${mode} 모드 사용자에게 오늘의 질문 알림톡 전송 시작...`);
+    
     // 1. 오늘의 질문 데이터 가져오기
     const questionService = require('../question/question.service');
     const questionData = await questionService.getTodayQuestion(prisma);
@@ -477,18 +480,19 @@ async function sendDailyQuestionToAllSubscribers(prisma) {
       throw new Error('오늘의 질문 데이터가 없습니다.');
     }
 
-    // 2. 구독 중인 사용자 찾기
+    // 2. 구독 중인 사용자 찾기 (모드별 필터링 추가)
     const subscribers = await prisma.user.findMany({
       where: {
         isSubscribed: true,
         phoneNumber: { not: null }, // 전화번호가 있는 사용자만
+        studyMode: mode // 특정 모드의 사용자만 필터링
       },
     });
 
     if (subscribers.length === 0) {
       return {
         success: true,
-        message: '전화번호가 등록된 구독자가 없습니다.',
+        message: `전화번호가 등록된 ${mode} 모드 구독자가 없습니다.`,
         sentCount: 0,
       };
     }
@@ -552,7 +556,7 @@ async function sendDailyQuestionToAllSubscribers(prisma) {
 
     return {
       success: true,
-      message: `${sentCount}명의 사용자에게 오늘의 질문 알림톡을 전송했습니다.`,
+      message: `${sentCount}명의 ${mode} 모드 사용자에게 오늘의 질문 알림톡을 전송했습니다.`,
       totalSubscribers: subscribers.length,
       sentCount,
       failedCount,
