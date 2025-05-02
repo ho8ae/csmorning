@@ -939,45 +939,64 @@ const handleWeeklyQuizCommand = async (req, user) => {
  */
 const handleWeeklyQuizAnswerCommand = async (req, user, utterance) => {
   try {
+    console.log('==== 주간 퀴즈 답변 처리 시작 ====');
+    console.log('사용자:', user.id, user.nickname);
+    console.log('발화:', utterance);
+    console.log('본문:', JSON.stringify(req.body, null, 2));
+
     // 임시 사용자인 경우 계정 연동 필요
     if (user.isTemporary) {
+      console.log('임시 사용자 - 계정 연동 필요');
       return createKakaoResponse(
         RESPONSE_MESSAGES.ACCOUNT_LINKING_REQUIRED,
         QUICK_REPLIES.DEFAULT,
       );
     }
 
-    // action.params에서 파라미터 추출 또는 utterance에서 추출
+    // 방법 1: action.params에서 파라미터 추출
     let quizNumber, answer;
-
-    // 방법 1: action.params에서 파라미터 추출 (파라미터가 블록에서 올바르게 설정된 경우)
+    
     if (req.body.action && req.body.action.params) {
+      console.log('action.params 사용:', req.body.action.params);
       quizNumber = parseInt(req.body.action.params.quizNumber);
-      answer = parseInt(req.body.action.params.answerNumber) - 1; // 0-based 인덱스로 변환
-      console.log(
-        `파라미터에서 추출된 값: 퀴즈번호=${quizNumber}, 답변=${answer}`,
-      );
+      answer = parseInt(req.body.action.params.answerNumber) - 1;
+      console.log(`params에서 추출: 퀴즈=${quizNumber}, 답변=${answer}`);
     }
-    // 방법 2: utterance에서 직접 파싱
+    // 방법 2: utterance 파싱 (수정된 부분)
     else {
-      // 입력 형식: "주간퀴즈답변 {문제번호} {답변번호}"
-      const parts = utterance.split(' ');
-      if (parts.length < 3) {
-        // 3개 항목이 필요 ("주간퀴즈답변", "{문제번호}", "{답변번호}")
-        return createKakaoResponse(
-          "올바른 답변 형식이 아닙니다. '주간 퀴즈'를 입력하여 다시 시도해주세요.",
-          QUICK_REPLIES.DEFAULT,
-        );
+      console.log('utterance 파싱 시도:', utterance);
+      // "주간퀴즈답변 1번 3" 형식 처리
+      if (utterance.includes('번')) {
+        const parts = utterance.split(' ');
+        if (parts.length >= 3) {
+          quizNumber = parseInt(parts[1].replace('번', ''));
+          answer = parseInt(parts[2]) - 1;
+          console.log(`발화(번 포함)에서 추출: 퀴즈=${quizNumber}, 답변=${answer}`);
+        }
+      } 
+      // "주간 퀴즈 답변 1 3" 형식 처리 
+      else {
+        const parts = utterance.split(' ');
+        if (parts.length >= 4) {
+          quizNumber = parseInt(parts[3]);
+          answer = parseInt(parts[4] || '1') - 1;
+          console.log(`발화에서 추출: 퀴즈=${quizNumber}, 답변=${answer}`);
+        }
       }
+    }
 
-      quizNumber = parseInt(parts[1]); // 퀴즈 번호
-      answer = parseInt(parts[2]) - 1; // 답변 번호 (0-based 인덱스로 변환)
-      console.log(`발화에서 추출된 값: 퀴즈번호=${quizNumber}, 답변=${answer}`);
+    // 값 검증
+    if (isNaN(quizNumber) || isNaN(answer)) {
+      console.log('유효하지 않은 파라미터:', quizNumber, answer);
+      return createKakaoResponse(
+        "올바른 답변 형식이 아닙니다. '주간 퀴즈'를 입력하여 다시 시도해주세요.",
+        QUICK_REPLIES.DEFAULT,
+      );
     }
 
     // 현재 주차 계산
     const weekNumber = webhookService.getCurrentWeekNumber();
-    console.log(`현재 주차: ${weekNumber}`);
+    console.log('주차:', weekNumber, '퀴즈번호:', quizNumber, '답변:', answer);
 
     // 해당 퀴즈 찾기
     const quiz = await webhookService.getWeeklyQuizByNumber(
@@ -987,21 +1006,18 @@ const handleWeeklyQuizAnswerCommand = async (req, user, utterance) => {
     );
 
     if (!quiz) {
-      console.error(
-        `퀴즈를 찾을 수 없음: 주차=${weekNumber}, 퀴즈번호=${quizNumber}`,
-      );
+      console.log('퀴즈를 찾을 수 없음:', weekNumber, quizNumber);
       return createKakaoResponse(
         "해당 번호의 퀴즈를 찾을 수 없습니다. '주간 퀴즈'를 입력하여 다시 시도해주세요.",
         QUICK_REPLIES.DEFAULT,
       );
     }
 
-    console.log(
-      `퀴즈 정보: id=${quiz.id}, 퀴즈번호=${quizNumber}, 정답=${quiz.correctOption}`,
-    );
+    console.log('퀴즈 정보:', quiz.id, quiz.quizText, '정답:', quiz.correctOption);
 
     try {
       // 응답 처리
+      console.log('응답 생성 시도:', user.id, quiz.id, answer);
       const result = await webhookService.createWeeklyQuizResponse(
         req.prisma,
         user.id,
@@ -1009,7 +1025,7 @@ const handleWeeklyQuizAnswerCommand = async (req, user, utterance) => {
         answer,
       );
 
-      console.log(`응답 처리 결과: 정답=${result.isCorrect}`);
+      console.log('응답 처리 결과:', result.isCorrect);
 
       // 응답 메시지 준비
       let responseText;
@@ -1022,7 +1038,7 @@ const handleWeeklyQuizAnswerCommand = async (req, user, utterance) => {
         }번입니다.\n\n[설명💡]\n\n${quiz.explanation}`;
       }
 
-      // 다음 퀴즈로 진행하는 버튼 추가 (수정: 직접 다음 퀴즈 로드)
+      // 다음 퀴즈 버튼 추가
       return createKakaoResponse(responseText, [
         {
           label: '다음 문제',
@@ -1041,26 +1057,16 @@ const handleWeeklyQuizAnswerCommand = async (req, user, utterance) => {
         },
       ]);
     } catch (error) {
-      console.error('주간 퀴즈 응답 처리 중 오류:', error);
-
-      // 이미 응답한 문제인 경우, 다음 문제로 자동 진행
-      if (
-        error.message &&
-        error.message.includes('이미 해당 퀴즈에 응답했습니다')
-      ) {
-        console.log('이미 응답한 문제, 다음 문제로 자동 진행');
-
-        // 다음 문제로 자동 진행 (주간 퀴즈 명령어를 재호출)
+      console.error('응답 처리 중 오류 발생:', error);
+      if (error.message && error.message.includes('이미 해당 퀴즈에 응답했습니다')) {
+        console.log('이미 응답한 퀴즈, 다음 문제로 자동 진행');
+        // 다음 문제로 자동 진행
         return await handleWeeklyQuizCommand(req, user);
       }
-
-      return createKakaoResponse(
-        "오류가 발생했습니다. '주간 퀴즈'를 입력하여 다시 시도해주세요.",
-        QUICK_REPLIES.DEFAULT,
-      );
+      throw error;
     }
   } catch (error) {
-    console.error('주간 퀴즈 답변 처리 중 오류:', error);
+    console.error('주간 퀴즈 답변 처리 중 오류:', error.stack);
     return createKakaoResponse(RESPONSE_MESSAGES.ERROR);
   }
 };

@@ -750,56 +750,71 @@ const getWeeklyQuizByNumber = async (prisma, weekNumber, quizNumber) => {
  * @returns {Promise<Object>} 응답 정보
  */
 const createWeeklyQuizResponse = async (prisma, userId, weeklyQuizId, answer) => {
-  // 퀴즈 정보 조회
-  const quiz = await prisma.weeklyQuiz.findUnique({
-    where: { id: weeklyQuizId }
-  });
+  console.log('==== 주간 퀴즈 응답 생성 시작 ====');
+  console.log('사용자:', userId, '퀴즈ID:', weeklyQuizId, '답변:', answer);
   
-  if (!quiz) {
-    throw new Error('해당 퀴즈를 찾을 수 없습니다.');
-  }
-  
-  // 이미 응답했는지 확인
-  const existingResponse = await prisma.weeklyResponse.findFirst({
-    where: {
-      userId,
-      weeklyQuizId
+  try {
+    // 퀴즈 정보 조회
+    const quiz = await prisma.weeklyQuiz.findUnique({
+      where: { id: weeklyQuizId }
+    });
+    
+    if (!quiz) {
+      console.log('퀴즈를 찾을 수 없음:', weeklyQuizId);
+      throw new Error('해당 퀴즈를 찾을 수 없습니다.');
     }
-  });
-  
-  if (existingResponse) {
-    throw new Error('이미 해당 퀴즈에 응답했습니다.');
-  }
-  
-  // 정답 여부 확인
-  const isCorrect = quiz.correctOption === answer;
-  
-  // 응답 저장
-  const response = await prisma.weeklyResponse.create({
-    data: {
-      userId,
-      weeklyQuizId,
-      answer,
+    
+    console.log('퀴즈 정보:', quiz.id, quiz.quizNumber, '정답:', quiz.correctOption);
+    
+    // 이미 응답했는지 확인
+    const existingResponse = await prisma.weeklyResponse.findFirst({
+      where: {
+        userId,
+        weeklyQuizId
+      }
+    });
+    
+    if (existingResponse) {
+      console.log('이미 응답한 퀴즈:', existingResponse);
+      throw new Error('이미 해당 퀴즈에 응답했습니다.');
+    }
+    
+    // 정답 여부 확인
+    const isCorrect = quiz.correctOption === answer;
+    console.log('정답 여부:', isCorrect, '입력:', answer, '정답:', quiz.correctOption);
+    
+    // 응답 저장
+    const response = await prisma.weeklyResponse.create({
+      data: {
+        userId,
+        weeklyQuizId,
+        answer,
+        isCorrect
+      }
+    });
+    
+    console.log('응답 저장 완료:', response.id);
+    
+    // 사용자 통계 업데이트
+    await prisma.user.update({
+      where: { id: userId },
+      data: {
+        totalAnswered: { increment: 1 },
+        correctAnswers: isCorrect ? { increment: 1 } : undefined
+      }
+    });
+    
+    console.log('사용자 통계 업데이트 완료');
+    
+    return {
+      response,
+      quiz,
       isCorrect
-    }
-  });
-  
-  // 사용자 통계 업데이트
-  await prisma.user.update({
-    where: { id: userId },
-    data: {
-      totalAnswered: { increment: 1 },
-      correctAnswers: isCorrect ? { increment: 1 } : undefined
-    }
-  });
-  
-  console.log(`주간 퀴즈 응답 저장 완료: 사용자=${userId}, 퀴즈=${weeklyQuizId}, 정답=${isCorrect}`);
-  
-  return {
-    response,
-    quiz,
-    isCorrect
-  };
+    };
+  } catch (error) {
+    console.error('응답 생성 중 오류:', error.stack);
+    throw error;
+  }
 };
 
 /**
