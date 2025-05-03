@@ -339,9 +339,9 @@ const handleKakaoMessage = async (req, res, next) => {
     const userId = userRequest.user.id;
     const utterance = userRequest.utterance;
 
-    console.log('받은 메시지:', utterance);
-    console.log('사용자 ID:', userId);
-    console.log('요청 본문:', JSON.stringify(req.body, null, 2));
+    // console.log('받은 메시지:', utterance);
+    // console.log('사용자 ID:', userId);
+    // console.log('요청 본문:', JSON.stringify(req.body, null, 2));
 
     // 사용자 확인/생성
     const user = await webhookService.findOrCreateUser(req.prisma, userId);
@@ -379,7 +379,7 @@ const handleKakaoMessage = async (req, res, next) => {
     }
     // 주간 퀴즈 답변 처리 (새로운 버전)
     else if (utterance.includes('주간퀴즈답변')) {
-      console.log('주간 퀴즈 답변 감지:', utterance);
+      // console.log('주간 퀴즈 답변 감지:', utterance);
       
       // 정규 표현식으로 퀴즈번호와 답변번호 추출
       const pattern = /주간퀴즈답변\s+(\d+)번\s+(\d+)/;
@@ -389,7 +389,7 @@ const handleKakaoMessage = async (req, res, next) => {
         const quizNumber = parseInt(match[1]);
         const answerNumber = parseInt(match[2]) - 1; // 0-based 인덱스로 변환
         
-        console.log(`추출된 정보: 퀴즈번호=${quizNumber}, 답변번호=${answerNumber}`);
+        // console.log(`추출된 정보: 퀴즈번호=${quizNumber}, 답변번호=${answerNumber}`);
         
         // 주간 퀴즈 답변 함수 호출
         responseBody = await handleWeeklyQuizAnswerCommand(
@@ -431,7 +431,7 @@ const handleKakaoMessage = async (req, res, next) => {
           const answerNumber = parseInt(utterance.trim());
           const quizNumber = userResponses.nextQuizNumber;
 
-          console.log('주간 모드 사용자의 숫자 응답을 주간 퀴즈 답변으로 처리:', quizNumber, answerNumber);
+          // console.log('주간 모드 사용자의 숫자 응답을 주간 퀴즈 답변으로 처리:', quizNumber, answerNumber);
           
           // 주간 퀴즈 답변 처리
           responseBody = await handleWeeklyQuizAnswerCommand(
@@ -999,7 +999,7 @@ const handleWeeklyQuizCommand = async (req, user) => {
  */
 const handleWeeklyQuizAnswerCommand = async (req, user, quizNumber, answer) => {
   try {
-    console.log('주간 퀴즈 답변 처리 시작:', quizNumber, answer);
+    // console.log('주간 퀴즈 답변 처리 시작:', quizNumber, answer);
     
     // 임시 사용자인 경우 계정 연동 필요
     if (user.isTemporary) {
@@ -1011,7 +1011,7 @@ const handleWeeklyQuizAnswerCommand = async (req, user, quizNumber, answer) => {
     
     // 현재 주차 계산 (임시로 항상 1 반환)
     const weekNumber = 1; // 고정값 사용
-    console.log('주차:', weekNumber);
+    // console.log('주차:', weekNumber);
     
     // 해당 퀴즈 찾기
     const quiz = await webhookService.getWeeklyQuizByNumber(
@@ -1027,7 +1027,7 @@ const handleWeeklyQuizAnswerCommand = async (req, user, quizNumber, answer) => {
       );
     }
     
-    console.log('퀴즈 정보:', quiz.id, quiz.quizText);
+    // console.log('퀴즈 정보:', quiz.id, quiz.quizText);
     
     // 이미 응답했는지 확인
     const existingResponse = await req.prisma.weeklyResponse.findFirst({
@@ -1045,7 +1045,7 @@ const handleWeeklyQuizAnswerCommand = async (req, user, quizNumber, answer) => {
     
     // 새 응답 생성
     try {
-      console.log('응답 생성 시도:', user.id, quiz.id, answer);
+      // console.log('응답 생성 시도:', user.id, quiz.id, answer);
       const result = await webhookService.createWeeklyQuizResponse(
         req.prisma,
         user.id,
@@ -1053,7 +1053,7 @@ const handleWeeklyQuizAnswerCommand = async (req, user, quizNumber, answer) => {
         answer
       );
       
-      console.log('응답 생성 결과:', result.isCorrect);
+      // console.log('응답 생성 결과:', result.isCorrect);
       
       // 응답 메시지 생성 (수정된 부분)
       let responseText;
