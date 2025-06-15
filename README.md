@@ -86,7 +86,7 @@ CS Morning은 개발자들이 매일 아침 CS(Computer Science) 관련 질문�
 </div>
 
 <h3> Hosting </h3>
-<img src="https://img.shields.io/badge/AWS-%23FF9900.svg?style=flat-square&logo=amazon-aws&logoColor=white"/>
+![image](https://github.com/user-attachments/assets/fbb1ff6f-2877-4a58-8588-3dda8b19c4c4)
 
 
 ##   🧐 사용자의 편의성을 위해서 고민한 것들?
@@ -102,6 +102,9 @@ CS Morning은 개발자들이 매일 아침 CS(Computer Science) 관련 질문�
 <img src="https://velog.velcdn.com/images/ho8ae/post/e37e772e-32e1-41cd-860d-07e11e91cbcc/image.png">
 
 이전에 기록했던 답변들이 사라지는 걸 막기 위해 `계정 연동 기능`을 구현하여 연동 전에 기록들이 삭제되는 것을 방지하였습니다.
+
+## 전체 아키텍쳐
+![image](https://github.com/user-attachments/assets/9c9291ce-7b33-4846-989c-3b84e76efb57)
 
 ## 느낀점
 
