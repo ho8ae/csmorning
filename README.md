@@ -85,9 +85,6 @@ CS Morning은 개발자들이 매일 아침 CS(Computer Science) 관련 질문�
 <img src="https://img.shields.io/badge/node.js-6DA55F?style=flat-square&logo=node.js&logoColor=white"/>
 </div>
 
-<h3> Hosting </h3>
-![image](https://github.com/user-attachments/assets/fbb1ff6f-2877-4a58-8588-3dda8b19c4c4)
-
 
 ##   🧐 사용자의 편의성을 위해서 고민한 것들?
 <img src="https://velog.velcdn.com/images/ho8ae/post/7c0dca4d-18a9-4224-ab5e-761c43c28258/image.png"/>
