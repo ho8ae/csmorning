@@ -1,15 +1,15 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import useAuthStore from '../store/authStore';
-import { statsAPI, usersAPI, questionsAPI } from '../services/api';
-import Sidebar from '../components/admin/Sidebar';
+import useAuthStore from '../../store/authStore';
+import { statsAPI, usersAPI, questionsAPI } from '../../services/api';
+import Sidebar from '../../components/admin/Sidebar';
 
 // Admin 컴포넌트들
-import DashboardHeader from '../components/admin/DashboardHeader';
-import StatsCard from '../components/admin/StatsCard';
-import UsersTable from '../components/admin/UsersTable';
-import QuestionsTable from '../components/admin/QuestionsTable';
-import LogoutButton from '../components/admin/LogoutButton';
+import DashboardHeader from '../../components/admin/DashboardHeader';
+import StatsCard from '../../components/admin/StatsCard';
+import UsersTable from '../../components/admin/UsersTable';
+import QuestionsTable from '../../components/admin/QuestionsTable';
+import LogoutButton from '../../components/admin/LogoutButton';
 
 const AdminDashboardPage = () => {
   const navigate = useNavigate();

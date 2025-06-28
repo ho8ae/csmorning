@@ -9,30 +9,40 @@ import useAuthStore from './store/authStore';
 
 // 일반 페이지
 import LandingPage from './pages/LandingPage';
-import LoginPage from './pages/LoginPage';
-import KakaoCallbackPage from './pages/KakaoCallbackPage';
 import DashboardPage from './pages/DashboardPage';
-import RegisterPage from './pages/RegisterPage';
 
-// 관리자 페이지
-import AdminDashboardPage from './pages/AdminDashboardPage';
+// auth 페이지
+import LoginPage from './pages/auth/LoginPage';
+import RegisterPage from './pages/auth/RegisterPage';
+
+// admin 페이지
+import AdminDashboardPage from './pages/admin/AdminDashboardPage';
 import QuestionsListPage from './pages/admin/QuestionsListPage';
 import NewQuestionPage from './pages/admin/NewQuestionPage';
 import EditQuestionPage from './pages/admin/EditQuestionPage';
 import UsersListPage from './pages/admin/UsersListPage';
-import TermsPage from './pages/TermsPage';
-import KakaoLinkPage from './pages/KakaoLinkPage';
-import PrivacyContentPage from './pages/PrivacyContentPage';
-import PremiumFeaturesPage from './pages/PremiumFeaturesPage';
-import PaymentSuccessPage from './pages/PaymentSuccessPage';
-import CheckoutPage from './pages/CheckoutPage';
-import SubscriptionTermsPage from './pages/SubscriptionTermsPage';
-import RefundPolicyPage from './pages/RefundPolicyPage';
-import DebateDetailPage from './pages/DebateDetailPage';
-import DebateListPage from './pages/DebateListPage';
+
+// kakao login 관려 페이지
+import KakaoLinkPage from './pages/kakao/KakaoLinkPage';
+import KakaoCallbackPage from './pages/kakao/KakaoCallbackPage';
+
+// payment 페이지
+import PremiumFeaturesPage from './pages/payment/PremiumFeaturesPage';
+import PaymentSuccessPage from './pages/payment/PaymentSuccessPage';
+import CheckoutPage from './pages/payment/CheckoutPage';
+
+// legal 페이지
+import SubscriptionTermsPage from './pages/legal/SubscriptionTermsPage';
+import RefundPolicyPage from './pages/legal/RefundPolicyPage';
+import TermsPage from './pages/legal/TermsPage';
+import PrivacyContentPage from './pages/legal/PrivacyContentPage';
+
+// debate 페이지
+import DebateDetailPage from './pages/debate/DebateDetailPage';
+import DebateListPage from './pages/debate/DebateListPage';
 
 function App() {
-  const { checkAuth, isAuthenticated } = useAuthStore();
+  const { checkAuth } = useAuthStore();
 
   // 초기 인증 상태 확인
   useEffect(() => {
@@ -50,7 +60,6 @@ function App() {
 
         {/* 카카오 싱크 로그인 페이지 */}
         <Route path="/kakao-sync-success" element={<KakaoCallbackPage />} />
-
 
         <Route path="/terms" element={<TermsPage />} />
         <Route path="/privacy" element={<PrivacyContentPage />} />

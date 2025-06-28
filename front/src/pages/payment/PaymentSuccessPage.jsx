@@ -1,8 +1,8 @@
 import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion'; // eslint-disable-line
-import Navbar from '../components/common/Navbar';
-import Footer from '../components/landing/Footer';
+import Navbar from '../../components/common/Navbar';
+import Footer from '../../components/landing/Footer';
 
 const PaymentSuccessPage = () => {
   useEffect(() => {

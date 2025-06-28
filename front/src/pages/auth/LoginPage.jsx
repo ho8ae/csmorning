@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 // eslint-disable-next-line no-unused-vars
 import { motion } from 'framer-motion'; 
-import useAuthStore from '../store/authStore';
-import KakaoLoginButton from '../components/common/KakaoLoginButton';
+import useAuthStore from '../../store/authStore';
+import KakaoLoginButton from '../../components/common/KakaoLoginButton';
 
 function LoginPage() {
   const [credentials, setCredentials] = useState({ username: '', password: '' });

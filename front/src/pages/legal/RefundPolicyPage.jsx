@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
-import Navbar from '../components/common/Navbar';
-import Footer from '../components/landing/Footer';
+import Navbar from '../../components/common/Navbar';
+import Footer from '../../components/landing/Footer';
 
 const RefundPolicyPage = () => {
   useEffect(() => {

@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion'; // eslint-disable-line
-import Navbar from '../components/common/Navbar';
-import Footer from '../components/landing/Footer';
-import useAuthStore from '../store/authStore';
-import { authAPI } from '../services/api';
+import Navbar from '../../components/common/Navbar';
+import Footer from '../../components/landing/Footer';
+import useAuthStore from '../../store/authStore';
+import { authAPI } from '../../services/api';
 
 const CheckoutPage = () => {
   const navigate = useNavigate();

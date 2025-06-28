@@ -1,8 +1,8 @@
 import { Outlet, Navigate } from 'react-router-dom';
 import { useEffect } from 'react';
-import Navbar from '../components/common/Navbar';
-import Sidebar from '../components/common/Sidebar';
-import useAuthStore from '../store/authStore';
+import Navbar from '../../components/common/Navbar';
+import Sidebar from '../../components/common/Sidebar';
+import useAuthStore from '../../store/authStore';
 
 function AdminPage() {
   const { isAuthenticated, isLoading, checkAuth } = useAuthStore();

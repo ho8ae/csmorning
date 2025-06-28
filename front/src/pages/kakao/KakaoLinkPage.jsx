@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { authAPI } from '../services/api';
-import useAuthStore from '../store/authStore';
+import { authAPI } from '../../services/api';
+import useAuthStore from '../../store/authStore';
 
 const KakaoLinkPage = () => {
   const [status, setStatus] = useState('loading');

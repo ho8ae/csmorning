@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Navigate } from 'react-router-dom';
 import { motion } from 'framer-motion'; // eslint-disable-line no-unused-vars
-import useAuthStore from '../store/authStore';
+import useAuthStore from '../../store/authStore';
 
 function RegisterPage() {
   const navigate = useNavigate();

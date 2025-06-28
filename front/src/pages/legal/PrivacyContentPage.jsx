@@ -1,4 +1,4 @@
-import PrivacyContent from "../components/landing/PrivacyContent";
+import PrivacyContent from "../../components/landing/PrivacyContent";
 
 const PrivacyContentPage = () => {
   return (

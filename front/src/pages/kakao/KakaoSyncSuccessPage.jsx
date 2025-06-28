@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { handleKakaoSyncSuccess } from '../services/kakaoAuth';
+import { handleKakaoSyncSuccess } from '../../services/kakaoAuth';
 
 const KakaoSyncSuccessPage = () => {
   const [isSuccess, setIsSuccess] = useState(false);
