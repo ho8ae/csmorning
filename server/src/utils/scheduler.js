@@ -11,75 +11,76 @@ function scheduleDailyQuestion() {
   console.log('스케줄러 초기화 중...');
 
   // 매일 아침 8시에 오늘의 질문 알림톡 전송 (한국 시간) - 매일 모드 사용자
-  cron.schedule(
-    '00 08 * * *',
-    async () => {
-      try {
-        console.log('오늘의 질문 알림톡 전송 시작 (매일 모드)...');
-        const result = await bizgoService.sendDailyQuestionToAllSubscribers(
-          prisma,
-          'daily'
-        );
-        console.log(
-          `오늘의 질문 알림톡 전송 결과 (매일 모드): ${result.sentCount}명 발송, ${result.failedCount}명 실패`,
-        );
-      } catch (error) {
-        console.error('오늘의 질문 알림톡 전송 중 오류 발생:', error);
-      }
-    },
-    {
-      timezone: 'Asia/Seoul',
-    },
-  );
+  // 2025.07.31 부로 알림톡 서비스 일시정지 
+  // cron.schedule(
+  //   '00 08 * * *',
+  //   async () => {
+  //     try {
+  //       console.log('오늘의 질문 알림톡 전송 시작 (매일 모드)...');
+  //       const result = await bizgoService.sendDailyQuestionToAllSubscribers(
+  //         prisma,
+  //         'daily'
+  //       );
+  //       console.log(
+  //         `오늘의 질문 알림톡 전송 결과 (매일 모드): ${result.sentCount}명 발송, ${result.failedCount}명 실패`,
+  //       );
+  //     } catch (error) {
+  //       console.error('오늘의 질문 알림톡 전송 중 오류 발생:', error);
+  //     }
+  //   },
+  //   {
+  //     timezone: 'Asia/Seoul',
+  //   },
+  // );
 
-  // 매일 오전 8시에 오늘의 CS 지식 알림톡 전송 (한국 시간) - 주간 모드 사용자
-  cron.schedule(
-    '00 08 * * *',
-    async () => {
-      try {
-        console.log('오늘의 CS 지식 알림톡 전송 시작 (주간 모드)...');
-        // CS 지식 컨텐츠 생성
-        const csContent = await contentService.generateTodayCSContent(prisma);
+  // // 매일 오전 8시에 오늘의 CS 지식 알림톡 전송 (한국 시간) - 주간 모드 사용자
+  // cron.schedule(
+  //   '00 08 * * *',
+  //   async () => {
+  //     try {
+  //       console.log('오늘의 CS 지식 알림톡 전송 시작 (주간 모드)...');
+  //       // CS 지식 컨텐츠 생성
+  //       const csContent = await contentService.generateTodayCSContent(prisma);
         
-        // 주간 모드 사용자에게 발송
-        const result = await bizgoService.sendDailyCSContentToSubscribers(
-          prisma,
-          'weekly',
-          csContent
-        );
-        console.log(
-          `오늘의 CS 지식 알림톡 전송 결과 (주간 모드): ${result.sentCount}명 발송, ${result.failedCount}명 실패`,
-        );
-      } catch (error) {
-        console.error('오늘의 CS 지식 알림톡 전송 중 오류 발생:', error);
-      }
-    },
-    {
-      timezone: 'Asia/Seoul',
-    },
-  );
+  //       // 주간 모드 사용자에게 발송
+  //       const result = await bizgoService.sendDailyCSContentToSubscribers(
+  //         prisma,
+  //         'weekly',
+  //         csContent
+  //       );
+  //       console.log(
+  //         `오늘의 CS 지식 알림톡 전송 결과 (주간 모드): ${result.sentCount}명 발송, ${result.failedCount}명 실패`,
+  //       );
+  //     } catch (error) {
+  //       console.error('오늘의 CS 지식 알림톡 전송 중 오류 발생:', error);
+  //     }
+  //   },
+  //   {
+  //     timezone: 'Asia/Seoul',
+  //   },
+  // );
   
-  // 매주 일요일 오전 10시에 주간 퀴즈 알림톡 전송 (한국 시간) - 주간 모드 사용자
-  cron.schedule(
-    '00 10 * * 0',
-    async () => {
-      try {
-        console.log('주간 퀴즈 알림톡 전송 시작...');
-        const result = await bizgoService.sendWeeklyQuizToSubscribers(
-          prisma,
-          'weekly'
-        );
-        console.log(
-          `주간 퀴즈 알림톡 전송 결과: ${result.sentCount}명 발송, ${result.failedCount}명 실패`,
-        );
-      } catch (error) {
-        console.error('주간 퀴즈 알림톡 전송 중 오류 발생:', error);
-      }
-    },
-    {
-      timezone: 'Asia/Seoul',
-    },
-  );
+  // // 매주 일요일 오전 10시에 주간 퀴즈 알림톡 전송 (한국 시간) - 주간 모드 사용자
+  // cron.schedule(
+  //   '00 10 * * 0',
+  //   async () => {
+  //     try {
+  //       console.log('주간 퀴즈 알림톡 전송 시작...');
+  //       const result = await bizgoService.sendWeeklyQuizToSubscribers(
+  //         prisma,
+  //         'weekly'
+  //       );
+  //       console.log(
+  //         `주간 퀴즈 알림톡 전송 결과: ${result.sentCount}명 발송, ${result.failedCount}명 실패`,
+  //       );
+  //     } catch (error) {
+  //       console.error('주간 퀴즈 알림톡 전송 중 오류 발생:', error);
+  //     }
+  //   },
+  //   {
+  //     timezone: 'Asia/Seoul',
+  //   },
+  // );
 
   // 매일 오전 7시 30분에 새로운 일일 질문 설정 (한국 시간)
   cron.schedule('30 07 * * *', createDailyQuestion, {
